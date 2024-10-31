@@ -3,9 +3,7 @@ package com.application.Entity;
 import lombok.*;
 import jakarta.persistence.*;
 import java.sql.Timestamp;
-import java.util.Set; // Set 임포트 추가
-import com.application.Entity.SessionRecording; // 다른 패키지에 있을 경우 임포트 필요
-import com.application.Entity.EmotionAnalysisReport;
+import java.util.Set;
 
 @Entity
 @Table(name = "sessions")

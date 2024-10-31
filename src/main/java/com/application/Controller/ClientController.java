@@ -2,7 +2,11 @@ package com.application.Controller;
 
 import com.application.Dto.ResponseDto;
 import com.application.Entity.Client;
+import com.application.Entity.EmotionMap;
+import com.application.Entity.Session;
 import com.application.Service.ClientService;
+import com.application.Service.EmotionAnalysisService;
+import com.application.Service.SessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,10 +17,14 @@ import java.util.List;
 public class ClientController {
 
     private final ClientService clientService;
+    private final EmotionAnalysisService emotionAnalysisService;
+    private final SessionService sessionService;
 
     @Autowired
-    public ClientController(ClientService clientService) {
+    public ClientController(ClientService clientService, EmotionAnalysisService emotionAnalysisService, SessionService sessionService) {
         this.clientService = clientService;
+        this.emotionAnalysisService = emotionAnalysisService;
+        this.sessionService = sessionService;
     }
 
     // 모든 내담자 조회
@@ -29,6 +37,18 @@ public class ClientController {
     @GetMapping("/{id}")
     public ResponseDto<Client> getClientById(@PathVariable Long id) {
         return clientService.getClientById(id);
+    }
+
+    // 특정 내담자의 종합 감정 정보 조회
+    @GetMapping("/{clientId}/summary")
+    public ResponseDto<EmotionMap> getEmotionSummaryByClient(@PathVariable Long clientId) {
+        return emotionAnalysisService.getEmotionSummaryByClient(clientId);
+    }
+
+    // 특정 내담자의 모든 세션 조회
+    @GetMapping("/{clientId}/sessions")
+    public ResponseDto<List<Session>> getSessionsByClient(@PathVariable Long clientId) {
+        return sessionService.getSessionsByClient(clientId);
     }
 
     // 내담자 추가
