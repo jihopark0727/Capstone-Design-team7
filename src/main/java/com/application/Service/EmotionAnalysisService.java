@@ -13,6 +13,7 @@ import com.application.Repository.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -40,27 +41,38 @@ public class EmotionAnalysisService {
         this.clientRepository = clientRepository;
     }
 
-    // 감정 분석 실행
-    public List<AIAnalysisResult> analyze(String filePath) {
-        // OpenAI Whisper API 호출하여 텍스트 변환
-        String transcript = callWhisperApi(filePath);
-        if (transcript == null) {
-            throw new RuntimeException("Whisper API 호출 실패");
-        }
+    // 녹음 파일 분석 메서드
+    public ResponseDto<String> analyzeRecording(Long clientId, MultipartFile file) {
+        try {
+            // 1. Whisper API를 호출하여 파일을 텍스트로 변환
+            String transcript = callWhisperApi(file);
 
-        // Local AI 모델 호출하여 감정 분석 수행
-        return callLocalAiModel(transcript);
+            if (transcript == null) {
+                return ResponseDto.setFailed("텍스트 변환에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            // 2. 변환된 텍스트를 로컬 AI 모델에 전달하여 감정 분석 수행
+            List<AIAnalysisResult> analysisResults = processTextWithAiModel(transcript);
+
+            // 3. 분석 결과 저장
+            saveAnalysisResults(clientId, analysisResults);
+
+            return ResponseDto.setSuccessData("AI 분석 완료", transcript, HttpStatus.OK);
+
+        } catch (Exception e) {
+            return ResponseDto.setFailed("녹음 분석 중 오류가 발생했습니다: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     // Whisper API 호출 메서드
-    private String callWhisperApi(String filePath) {
-        // Whisper API 호출 로직 구현
-        return "변환된 텍스트"; // 임시 텍스트 반환
+    private String callWhisperApi(MultipartFile file) {
+        // Whisper API 호출 코드 (구현 생략)
+        return "transcribed text from Whisper API"; // 임시 텍스트 반환
     }
 
-    // Local AI 모델 호출
-    private List<AIAnalysisResult> callLocalAiModel(String transcript) {
-        // 로컬 AI 모델 호출 로직 구현
+    // 로컬 AI 모델 호출 메서드
+    private List<AIAnalysisResult> processTextWithAiModel(String transcript) {
+        // AI 모델 호출 코드 (구현 생략)
         return List.of(); // 임시 빈 결과 반환
     }
 

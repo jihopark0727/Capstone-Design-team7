@@ -49,7 +49,7 @@ public class SessionController {
     public ResponseDto<String> analyzeRecording(
             @PathVariable Long clientId,
             @RequestParam("file") MultipartFile file) {
-        return sessionService.processRecording(clientId, file);
+        return emotionAnalysisService.analyzeRecording(clientId, file);
     }
 
     // 세션 추가 및 파일 업로드
