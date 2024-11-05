@@ -2,11 +2,9 @@ package com.application.Service;
 
 import com.application.Client.NaverCloudClient;
 import com.application.Dto.ResponseDto;
-import com.application.Dto.AIAnalysisResult;
 import com.application.Entity.EmotionAnalysisReport;
 import com.application.Entity.EmotionMap;
 import com.application.Entity.Session;
-import com.application.Entity.Client;
 import com.application.Repository.EmotionAnalysisReportRepository;
 import com.application.Repository.EmotionMapRepository;
 import com.application.Repository.SessionRepository;
@@ -14,7 +12,6 @@ import com.application.Repository.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -33,7 +30,7 @@ public class EmotionAnalysisService {
     private final SessionRepository sessionRepository;
     private final ClientRepository clientRepository;
     private final NaverCloudClient naverCloudClient;
-    private final FlaskCommunicationService flaskCommunicationService; // FlaskCommunicationService 주입
+    private final FlaskCommunicationService flaskCommunicationService;
 
     @Autowired
     public EmotionAnalysisService(
@@ -42,7 +39,7 @@ public class EmotionAnalysisService {
             SessionRepository sessionRepository,
             ClientRepository clientRepository,
             NaverCloudClient naverCloudClient,
-            FlaskCommunicationService flaskCommunicationService  // 주입
+            FlaskCommunicationService flaskCommunicationService
     ) {
         this.emotionAnalysisReportRepository = emotionAnalysisReportRepository;
         this.emotionMapRepository = emotionMapRepository;
@@ -54,13 +51,10 @@ public class EmotionAnalysisService {
 
     public ResponseDto<String> analyzeRecording(Long clientId, MultipartFile file) {
         try {
-            // MultipartFile을 File로 변환
             File convFile = convertMultipartFileToFile(file);
 
-            // NaverCloudClient를 통해 파일을 텍스트로 변환
             String transcript = naverCloudClient.soundToText(convFile);
 
-            // 변환이 완료되면 임시 파일 삭제
             if (!convFile.delete()) {
                 System.out.println("Failed to delete the temporary file");
             }
@@ -69,10 +63,8 @@ public class EmotionAnalysisService {
                 return ResponseDto.setFailed("텍스트 변환에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
-            // 로컬 AI 모델에 텍스트 전달 및 감정 분석 수행
             String predictionResult = flaskCommunicationService.getPrediction(transcript);
 
-            // 예측 결과 저장
             saveAnalysisResults(clientId, predictionResult);
 
             return ResponseDto.setSuccessData("AI 분석 완료", predictionResult, HttpStatus.OK);
@@ -94,8 +86,6 @@ public class EmotionAnalysisService {
     }
 
     public void saveAnalysisResults(Long sessionId, String predictionResult) {
-        // 로컬 AI의 예측 결과를 분석 보고서에 저장하는 로직 (여기서는 간단히 결과를 저장하는 예시로 작성)
-        // AI 모델 결과의 감정 분석 요약을 EmotionMap으로 저장
         Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 세션 ID가 존재하지 않습니다."));
 
@@ -135,5 +125,10 @@ public class EmotionAnalysisService {
                 .flatMap(report -> List.of(report.getKeywords().split(",")).stream())
                 .collect(Collectors.groupingBy(keyword -> keyword, Collectors.counting()))
                 .toString();
+    }
+
+    // 새롭게 추가된 메서드
+    public List<EmotionMap> getEmotionSummaryByClient(Long clientId) {
+        return emotionMapRepository.findByClient_Id(clientId);
     }
 }
