@@ -1,0 +1,233 @@
+/* 기본 스타일 */
+* {
+  box-sizing: border-box;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #f0f0f0;
+  color: #202632;
+}
+
+.container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* 헤더 스타일 */
+header {
+  background-color: #0064FF;
+  color: white;
+  padding: 10px 0;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: #f0f0f0;
+  text-decoration: none;
+  font-family: 'Arial', sans-serif;  /* 원하는 폰트로 변경 가능 */
+  letter-spacing: 1px;  /* 글자 간격 */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* 텍스트에 그림자 효과 */
+  margin-left: 30px;
+  margin-top: 5px;
+}
+
+/* 호버 효과 추가 (선택사항) */
+.logo:hover {
+  color: #0056D6;
+  transition: color 0.3s ease;
+}
+
+nav ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+nav ul li {
+  margin: 5px 10px;
+}
+
+nav ul li a {
+  color: white;
+  text-decoration: none;
+}
+
+/* 메인 컨텐츠: 좌우 배치 */
+.main-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+/* 좌측 슬라이더 */
+.left-content {
+  width: 60%;
+  padding-right: 20px;
+}
+
+/* 우측 로그인 폼 */
+.right-content {
+  width: 35%;
+  padding-left: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+/* 로그인 폼 스타일 */
+.login-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-form input, .login-form select, .login-form button {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.login-form button {
+  background-color: #0064FF;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+/* 소셜 로그인 */
+.social-login {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.social-login img {
+  margin: 0 5px;
+  cursor: pointer;
+}
+
+/* 슬라이더 스타일 */
+.slider {
+  position: relative;
+  overflow: hidden;
+  max-width: 100%;
+  text-align: center;
+}
+
+.slide {
+  padding: 20px;
+}
+
+/* 슬라이더 이미지 스타일 */
+.slider-image {
+  width: 100%;
+  height: auto;
+  max-height: 70%;
+  margin: 10px 0;
+}
+
+/* 동그라미(Dot) UI 중앙 배치 */
+.pagination {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.dot {
+  height: 10px;
+  width: 10px;
+  background-color: #bbb;
+  border-radius: 50%;
+  display: inline-block;
+  margin: 0 5px;
+  cursor: pointer;
+}
+
+.dot.active {
+  background-color: #0064FF;
+}
+
+/* 테이블 스타일 */
+.table-container {
+  overflow-x: auto;
+}
+
+.data-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-grid th, .data-grid td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.data-grid th {
+  background-color: #0064FF;
+  color: white;
+}
+
+.data-grid tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.status-new {
+  color: red;
+  font-weight: bold;
+}
+
+.status-ongoing {
+  color: blue;
+  font-weight: bold;
+}
+
+.edit-icon {
+  cursor: pointer;
+  color: #0064FF;
+}
+
+/* 반응형 미디어 쿼리 */
+@media (max-width: 1024px) {
+  .left-content, .right-content {
+    width: 100%;  /* 중간 크기 화면에서는 슬라이더와 로그인 폼이 모두 100% 너비 */
+    padding: 0;
+  }
+
+  .right-content {
+    margin-top: 20px;  /* 로그인 폼을 슬라이더 밑으로 배치 */
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    flex-direction: column;  /* 모바일 화면에서는 수직 배치 */
+    align-items: center;     /* 요소를 중앙 정렬 */
+  }
+
+  .left-content, .right-content {
+    width: 100%;
+  }
+
+  .right-content {
+    margin-top: 20px;
+  }
+
+  .search-bar, .add-client {
+    width: 100%;
+  }
+
+  .add-client {
+    margin-top: 10px;
+  }
+}
