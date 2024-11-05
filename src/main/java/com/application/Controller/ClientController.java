@@ -39,11 +39,12 @@ public class ClientController {
         return clientService.getClientById(id);
     }
 
-    // 특정 내담자의 종합 감정 정보 조회
     @GetMapping("/{clientId}/summary")
-    public ResponseDto<EmotionMap> getEmotionSummaryByClient(@PathVariable Long clientId) {
-        return emotionAnalysisService.getEmotionSummaryByClient(clientId);
+    public ResponseDto<List<EmotionMap>> getEmotionSummaryByClient(@PathVariable Long clientId) {
+        List<EmotionMap> emotionSummary = emotionAnalysisService.getEmotionSummaryByClient(clientId);
+        return ResponseDto.setSuccessData(emotionSummary); // 혹은 적절한 성공 메시지와 데이터를 함께 반환
     }
+
 
     // 특정 내담자의 모든 세션 조회
     @GetMapping("/{clientId}/sessions")

@@ -33,8 +33,13 @@ public class ResponseDto<D> {
         return ResponseDto.set(false, message, data, status.value());
     }
 
-    // 요청이 성공했을 때 데이터와 상태 코드만 반환
+    // 요청이 성공했을 때 데이터와 기본 상태 코드(200)만 반환
+    public static <D> ResponseDto<D> setSuccessData(D data) {
+        return ResponseDto.set(true, "Success", data, HttpStatus.OK.value());
+    }
+
+    // 요청이 성공했을 때 데이터와 상태 코드 반환
     public static <D> ResponseDto<D> setSuccessData(D data, HttpStatus status) {
-        return ResponseDto.set(true, null, data, status.value());
+        return ResponseDto.set(true, "Success", data, status.value());
     }
 }

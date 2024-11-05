@@ -1,6 +1,7 @@
 package com.application.Service;
 
 import com.application.Client.NaverCloudClient;
+import com.application.Dto.AIAnalysisResult;
 import com.application.Dto.ResponseDto;
 import com.application.Entity.EmotionAnalysisReport;
 import com.application.Entity.EmotionMap;
@@ -9,6 +10,8 @@ import com.application.Repository.EmotionAnalysisReportRepository;
 import com.application.Repository.EmotionMapRepository;
 import com.application.Repository.SessionRepository;
 import com.application.Repository.ClientRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -52,7 +55,6 @@ public class EmotionAnalysisService {
     public ResponseDto<String> analyzeRecording(Long clientId, MultipartFile file) {
         try {
             File convFile = convertMultipartFileToFile(file);
-
             String transcript = naverCloudClient.soundToText(convFile);
 
             if (!convFile.delete()) {
@@ -65,7 +67,12 @@ public class EmotionAnalysisService {
 
             String predictionResult = flaskCommunicationService.getPrediction(transcript);
 
-            saveAnalysisResults(clientId, predictionResult);
+            // JSON 문자열을 List<AIAnalysisResult>로 변환
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<AIAnalysisResult> analysisResults = objectMapper.readValue(
+                    predictionResult, new TypeReference<List<AIAnalysisResult>>() {});
+
+            saveAnalysisResults(clientId, analysisResults);
 
             return ResponseDto.setSuccessData("AI 분석 완료", predictionResult, HttpStatus.OK);
         } catch (IOException e) {
@@ -77,6 +84,7 @@ public class EmotionAnalysisService {
         }
     }
 
+
     private File convertMultipartFileToFile(MultipartFile file) throws IOException {
         File convFile = File.createTempFile("upload_", Objects.requireNonNull(file.getOriginalFilename()));
         try (FileOutputStream fos = new FileOutputStream(convFile)) {
@@ -85,49 +93,29 @@ public class EmotionAnalysisService {
         return convFile;
     }
 
-    public void saveAnalysisResults(Long sessionId, String predictionResult) {
+    // 감정 분석 결과를 List<AIAnalysisResult>로 받아서 저장하는 메서드
+    public void saveAnalysisResults(Long sessionId, List<AIAnalysisResult> analysisResults) {
         Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 세션 ID가 존재하지 않습니다."));
 
-        EmotionMap emotionMap = new EmotionMap();
-        emotionMap.setClient(session.getClient());
-        emotionMap.setAnalysisSummary(predictionResult);
-        emotionMap.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+        List<EmotionAnalysisReport> reports = analysisResults.stream().map(result -> {
+            EmotionAnalysisReport report = new EmotionAnalysisReport();
+            report.setSession(session);
+            report.setSentenceNumber(result.getSentenceNumber());
+            report.setSentenceText(result.getSentenceText());
+            report.setDominantEmotion(result.getEmotion());
+            report.setKeywords(result.getKeywords());
+            report.setAnalyzedAt(new Timestamp(System.currentTimeMillis()));
+            return report;
+        }).collect(Collectors.toList());
 
-        emotionMapRepository.save(emotionMap);
+        emotionAnalysisReportRepository.saveAll(reports);
     }
 
-    private void saveEmotionMapSummary(Session session, List<EmotionAnalysisReport> reports) {
-        String dominantEmotion = calculateDominantEmotion(reports);
-        String keywordSummary = generateKeywordSummary(reports);
-
-        EmotionMap emotionMap = new EmotionMap();
-        emotionMap.setClient(session.getClient());
-        emotionMap.setDominantEmotion(dominantEmotion);
-        emotionMap.setKeywordSummary(keywordSummary);
-        emotionMap.setAnalysisSummary("주요 감정: " + dominantEmotion + ", 키워드 요약: " + keywordSummary);
-        emotionMap.setCreatedAt(new Timestamp(System.currentTimeMillis()));
-
-        emotionMapRepository.save(emotionMap);
+    public List<EmotionAnalysisReport> getEmotionReportsBySession(Long sessionId) {
+        return emotionAnalysisReportRepository.findBySessionId(sessionId);
     }
 
-    private String calculateDominantEmotion(List<EmotionAnalysisReport> reports) {
-        Map<String, Long> emotionCount = reports.stream()
-                .collect(Collectors.groupingBy(EmotionAnalysisReport::getDominantEmotion, Collectors.counting()));
-        return emotionCount.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElse("None");
-    }
-
-    private String generateKeywordSummary(List<EmotionAnalysisReport> reports) {
-        return reports.stream()
-                .flatMap(report -> List.of(report.getKeywords().split(",")).stream())
-                .collect(Collectors.groupingBy(keyword -> keyword, Collectors.counting()))
-                .toString();
-    }
-
-    // 새롭게 추가된 메서드
     public List<EmotionMap> getEmotionSummaryByClient(Long clientId) {
         return emotionMapRepository.findByClient_Id(clientId);
     }

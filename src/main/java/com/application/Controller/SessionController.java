@@ -64,7 +64,8 @@ public class SessionController {
     // 특정 세션의 감정 분석 결과 조회
     @GetMapping("/{sessionId}/analysis")
     public ResponseDto<List<EmotionAnalysisReport>> getEmotionReportsBySession(@PathVariable Long sessionId) {
-        return emotionAnalysisService.getEmotionReportsBySession(sessionId);
+        List<EmotionAnalysisReport> emotionReports = emotionAnalysisService.getEmotionReportsBySession(sessionId);
+        return ResponseDto.setSuccessData("세션의 감정 분석 결과 조회 성공", emotionReports, HttpStatus.OK);
     }
 
     // 세션 삭제
