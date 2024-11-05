@@ -1,5 +1,6 @@
 package com.application.Service;
 
+import com.application.Client.NaverCloudClient;
 import com.application.Dto.ResponseDto;
 import com.application.Dto.AIAnalysisResult;
 import com.application.Entity.EmotionAnalysisReport;
@@ -13,92 +14,99 @@ import com.application.Repository.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 public class EmotionAnalysisService {
-
     private final EmotionAnalysisReportRepository emotionAnalysisReportRepository;
     private final EmotionMapRepository emotionMapRepository;
     private final SessionRepository sessionRepository;
     private final ClientRepository clientRepository;
+    private final NaverCloudClient naverCloudClient;
+    private final FlaskCommunicationService flaskCommunicationService; // FlaskCommunicationService 주입
 
     @Autowired
     public EmotionAnalysisService(
             EmotionAnalysisReportRepository emotionAnalysisReportRepository,
             EmotionMapRepository emotionMapRepository,
             SessionRepository sessionRepository,
-            ClientRepository clientRepository
+            ClientRepository clientRepository,
+            NaverCloudClient naverCloudClient,
+            FlaskCommunicationService flaskCommunicationService  // 주입
     ) {
         this.emotionAnalysisReportRepository = emotionAnalysisReportRepository;
         this.emotionMapRepository = emotionMapRepository;
         this.sessionRepository = sessionRepository;
         this.clientRepository = clientRepository;
+        this.naverCloudClient = naverCloudClient;
+        this.flaskCommunicationService = flaskCommunicationService;
     }
 
-    // 녹음 파일 분석 메서드
     public ResponseDto<String> analyzeRecording(Long clientId, MultipartFile file) {
         try {
-            // 1. Whisper API를 호출하여 파일을 텍스트로 변환
-            String transcript = callWhisperApi(file);
+            // MultipartFile을 File로 변환
+            File convFile = convertMultipartFileToFile(file);
+
+            // NaverCloudClient를 통해 파일을 텍스트로 변환
+            String transcript = naverCloudClient.soundToText(convFile);
+
+            // 변환이 완료되면 임시 파일 삭제
+            if (!convFile.delete()) {
+                System.out.println("Failed to delete the temporary file");
+            }
 
             if (transcript == null) {
                 return ResponseDto.setFailed("텍스트 변환에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
-            // 2. 변환된 텍스트를 로컬 AI 모델에 전달하여 감정 분석 수행
-            List<AIAnalysisResult> analysisResults = processTextWithAiModel(transcript);
+            // 로컬 AI 모델에 텍스트 전달 및 감정 분석 수행
+            String predictionResult = flaskCommunicationService.getPrediction(transcript);
 
-            // 3. 분석 결과 저장
-            saveAnalysisResults(clientId, analysisResults);
+            // 예측 결과 저장
+            saveAnalysisResults(clientId, predictionResult);
 
-            return ResponseDto.setSuccessData("AI 분석 완료", transcript, HttpStatus.OK);
-
+            return ResponseDto.setSuccessData("AI 분석 완료", predictionResult, HttpStatus.OK);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseDto.setFailed("파일 처리 중 오류가 발생했습니다: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseDto.setFailed("녹음 분석 중 오류가 발생했습니다: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // Whisper API 호출 메서드
-    private String callWhisperApi(MultipartFile file) {
-        // Whisper API 호출 코드 (구현 생략)
-        return "transcribed text from Whisper API"; // 임시 텍스트 반환
+    private File convertMultipartFileToFile(MultipartFile file) throws IOException {
+        File convFile = File.createTempFile("upload_", Objects.requireNonNull(file.getOriginalFilename()));
+        try (FileOutputStream fos = new FileOutputStream(convFile)) {
+            fos.write(file.getBytes());
+        }
+        return convFile;
     }
 
-    // 로컬 AI 모델 호출 메서드
-    private List<AIAnalysisResult> processTextWithAiModel(String transcript) {
-        // AI 모델 호출 코드 (구현 생략)
-        return List.of(); // 임시 빈 결과 반환
-    }
-
-    // 감정 분석 결과 저장
-    public void saveAnalysisResults(Long sessionId, List<AIAnalysisResult> analysisResults) {
+    public void saveAnalysisResults(Long sessionId, String predictionResult) {
+        // 로컬 AI의 예측 결과를 분석 보고서에 저장하는 로직 (여기서는 간단히 결과를 저장하는 예시로 작성)
+        // AI 모델 결과의 감정 분석 요약을 EmotionMap으로 저장
         Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 세션 ID가 존재하지 않습니다."));
 
-        List<EmotionAnalysisReport> reports = analysisResults.stream().map(result -> {
-            EmotionAnalysisReport report = new EmotionAnalysisReport();
-            report.setSession(session);
-            report.setSentenceNumber(result.getSentenceNumber());
-            report.setSentenceText(result.getSentenceText());
-            report.setDominantEmotion(result.getEmotion());
-            report.setKeywords(result.getKeywords());
-            report.setAnalyzedAt(new Timestamp(System.currentTimeMillis()));
-            return report;
-        }).collect(Collectors.toList());
+        EmotionMap emotionMap = new EmotionMap();
+        emotionMap.setClient(session.getClient());
+        emotionMap.setAnalysisSummary(predictionResult);
+        emotionMap.setCreatedAt(new Timestamp(System.currentTimeMillis()));
 
-        emotionAnalysisReportRepository.saveAll(reports);
-
-        // 종합 감정 요약 저장
-        saveEmotionMapSummary(session, reports);
+        emotionMapRepository.save(emotionMap);
     }
 
-    // 특정 세션의 감정 분석 요약 저장
     private void saveEmotionMapSummary(Session session, List<EmotionAnalysisReport> reports) {
         String dominantEmotion = calculateDominantEmotion(reports);
         String keywordSummary = generateKeywordSummary(reports);
@@ -113,33 +121,6 @@ public class EmotionAnalysisService {
         emotionMapRepository.save(emotionMap);
     }
 
-    // 특정 내담자의 종합 감정 정보 조회
-    public ResponseDto<EmotionMap> getEmotionSummaryByClient(Long clientId) {
-        Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 내담자 ID가 존재하지 않습니다."));
-
-        EmotionMap emotionMap = emotionMapRepository.findByClient(client)
-                .orElse(null);
-
-        if (emotionMap != null) {
-            return ResponseDto.setSuccessData("내담자의 종합 감정 정보 조회 성공", emotionMap, HttpStatus.OK);
-        } else {
-            return ResponseDto.setFailed("내담자의 종합 감정 정보가 존재하지 않습니다.", HttpStatus.NOT_FOUND);
-        }
-    }
-
-    public ResponseDto<List<EmotionAnalysisReport>> getEmotionReportsBySession(Long sessionId) {
-        // sessionId에 해당하는 EmotionAnalysisReport 목록을 조회
-        List<EmotionAnalysisReport> reports = emotionAnalysisReportRepository.findBySessionId(sessionId);
-
-        if (reports.isEmpty()) {
-            return ResponseDto.setFailed("해당 세션 ID에 대한 분석 결과가 없습니다.", HttpStatus.NOT_FOUND);
-        }
-
-        return ResponseDto.setSuccessData("감정 분석 결과 조회 성공", reports, HttpStatus.OK);
-    }
-
-    // 주된 감정 계산
     private String calculateDominantEmotion(List<EmotionAnalysisReport> reports) {
         Map<String, Long> emotionCount = reports.stream()
                 .collect(Collectors.groupingBy(EmotionAnalysisReport::getDominantEmotion, Collectors.counting()));
@@ -149,7 +130,6 @@ public class EmotionAnalysisService {
                 .orElse("None");
     }
 
-    // 키워드 요약 생성
     private String generateKeywordSummary(List<EmotionAnalysisReport> reports) {
         return reports.stream()
                 .flatMap(report -> List.of(report.getKeywords().split(",")).stream())

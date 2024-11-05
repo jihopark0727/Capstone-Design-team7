@@ -52,14 +52,6 @@ public class SessionController {
         return emotionAnalysisService.analyzeRecording(clientId, file);
     }
 
-    // 세션 추가 및 파일 업로드
-    @PostMapping("/{clientId}/upload")
-    public ResponseDto<Session> addSessionWithRecording(
-            @PathVariable Long clientId,
-            @RequestParam("file") MultipartFile file) {
-        return sessionService.addSessionWithRecording(clientId, file);
-    }
-
     // 감정 분석 결과 저장 API
     @PostMapping("/{sessionId}/analyze")
     public ResponseDto<?> saveAnalysisResults(
