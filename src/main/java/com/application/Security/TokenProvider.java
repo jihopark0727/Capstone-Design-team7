@@ -18,9 +18,7 @@ public class TokenProvider {
 
     private static final Logger logger = Logger.getLogger(TokenProvider.class.getName());
 
-    @Value("${jwt.security.key}")
-    private String securityKey;
-
+    private static final String securityKey = "mySuperSecretKey0727072707270727072707270727SuperSecureExtraKey";
     private static final int DEFAULT_DURATION = 3600; // 기본 만료 시간 (1시간)
 
     // JWT 생성 메서드 (사용자 정의 만료 시간)

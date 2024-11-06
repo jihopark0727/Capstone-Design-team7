@@ -76,9 +76,6 @@ public class AuthService {
             return ResponseDto.setFailed("비밀번호가 일치하지 않습니다.", HttpStatus.UNAUTHORIZED);
         }
 
-        // 비밀번호를 제거하여 응답에 포함되지 않도록 처리
-        counselor.setPassword(null);
-
         // JWT 토큰 생성
         int exprTime = 3600; // 1시간 유효
         String token = tokenProvider.createJwt(email, exprTime);
