@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SignUpDto {
+	// Request 모델인지, Response 모델인지 구분이 명확했으면 좋겠어요
 
     @NotBlank(message = "이메일을 입력해 주세요.")
     @Email(message = "유효한 이메일 주소를 입력해 주세요.")

@@ -37,6 +37,9 @@ public class AuthService {
         // 이메일 중복 확인
         if (userRepository.existsByEmail(email)) {
             return ResponseDto.setFailed("중복된 Email 입니다.", HttpStatus.BAD_REQUEST);
+			// 시간이 되신다면 나~~중에 에러 응답을 직접 내려주는게 아니라 throw만 하고 별도의 에러 핸들러를 정의하셔서
+			// 거기서 처리를 하시는 게 좋을거 같아요. 현재는 콘솔에 5xx번대 에러는 그대로 출력이 되면 좋긴 한데
+			// 4xx 번대 오류는 사용자의 오류니 굳이 콘솔에 출력할 필요도 없을 거 같고요. 이런 처리를 모아서 하면 좋을 거 같아요
         }
 
         // 비밀번호 암호화

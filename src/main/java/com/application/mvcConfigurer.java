@@ -6,6 +6,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class mvcConfigurer implements WebMvcConfigurer {
+	// config 클래스들도 별도로 package를 만들어서 나누는게 좋을거 같아요
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {

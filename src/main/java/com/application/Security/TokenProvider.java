@@ -1,5 +1,6 @@
 package com.application.Security;
 
+// intelliJ에서 불필요한 imports에 대한 자동 제거 설정을 킬 수 있어요
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ import java.util.logging.Logger;
 
 @Service
 public class TokenProvider {
+	// 이 클래스는 Bean 보다는 static 성격이 강한 것 같은데요 맞나요?
 
     private static final Logger logger = Logger.getLogger(TokenProvider.class.getName());
 

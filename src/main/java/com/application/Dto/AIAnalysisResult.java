@@ -13,6 +13,7 @@ public class AIAnalysisResult {
     private String sentenceText;   // 분석된 문장 내용
     private String emotion;        // 감정 분석 결과 (예: "기쁨", "슬픔", "분노" 등)
     private String keywords;       // 문장에 대한 주요 키워드 (쉼표로 구분된 문자열)
+	// String으로 내려주는 것보단 response용 class를 별도로 선언하거나 List<String>으로 내려주는게 좋을 거 같아요
 
     // 필요한 경우 추가할 수 있는 필드 예시:
     // private double confidenceScore; // 감정 분석 신뢰도 점수

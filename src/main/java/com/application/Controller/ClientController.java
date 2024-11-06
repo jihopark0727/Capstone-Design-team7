@@ -26,6 +26,8 @@ public class ClientController {
         this.emotionAnalysisService = emotionAnalysisService;
         this.sessionService = sessionService;
     }
+	// @RequiredArgsConstructor를 사용하시는 건 어떨까요?
+	// @Autowired랑 생성자 주입 방식이 동시에 사용되는 건 좀 특이해 보이네요
 
     // 모든 내담자 조회
     @GetMapping
@@ -59,6 +61,7 @@ public class ClientController {
     }
 
     // 내담자 정보 수정
+	// 이건 전체 업데이트를 발생시켜서 patch와 구분해서 사용하신거죠?
     @PutMapping("/{id}")
     public ResponseDto<Client> updateClient(@PathVariable Long id, @RequestBody Client client) {
         return clientService.updateClient(id, client);
