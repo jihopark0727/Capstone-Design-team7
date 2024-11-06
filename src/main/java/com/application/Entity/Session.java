@@ -35,4 +35,6 @@ public class Session {
 
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<EmotionAnalysisReport> emotionAnalysisReports;
+
+	// 연관관계 매핑이 엄청 빡센 엔티티군요.. 요거 N+1 쿼리 이슈 좀 없을 지 검토 필요할 거 같아요
 }

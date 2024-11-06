@@ -29,6 +29,7 @@ public class Client {
 
     @Column(length = 10)
     private String gender;
+	// gender는 enum으로 선언하시는 게 어떨까요?
 
     @Column(nullable = false)
     @Temporal(TemporalType.DATE)

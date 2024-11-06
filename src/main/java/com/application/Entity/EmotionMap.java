@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+// AllArgs, Builder 모두 사용하시는 건가요? 필요한 것만 선언하는 게 어떨까 싶네요. static 메서드 패턴도 시간이 되실 때 보면 좋을거 같아요
 public class EmotionMap {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

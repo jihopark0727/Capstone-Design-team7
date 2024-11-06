@@ -4,6 +4,8 @@ import SearchBar from '../components/SearchBar';
 import ClientTable from '../components/ClientTable';
 import ClientRegistrationForm from '../components/ClientRegistrationForm';
 
+// 리액트에서 상태관리는 어떤 라이브러리를 사용하시나요?
+
 function ClientsPage() {
   const [clients, setClients] = useState([
     { status: "신규", name: "김철수", topic: "우울증", affiliation: "A대학교", contact: "010-1234-5678", gender: "남", age: 25, registrationDate: "2023-05-01" },

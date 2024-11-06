@@ -42,6 +42,7 @@ public class ClientService {
                     client.setAge(updatedClient.getAge());
                     client.setGender(updatedClient.getGender());
                     clientRepository.save(client);
+					// JPA에서는 dirty check를 해서 별도로 save를 안 해도 되지 않나요? 이러면 duplicated key 오류 발생할 거 같은데요
                     return ResponseDto.setSuccessData("내담자 정보 수정 성공", client, HttpStatus.OK);
                 })
                 .orElse(ResponseDto.setFailed("내담자 ID가 존재하지 않습니다.", HttpStatus.NOT_FOUND));
