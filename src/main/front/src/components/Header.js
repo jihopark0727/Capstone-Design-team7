@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './Header.css'; // 스타일 파일 연결
 
-function Header() {
+function Header({ counselorName }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const location = useLocation(); // 현재 경로를 확인하기 위해 useLocation 사용
     const navigate = useNavigate();
@@ -51,6 +51,8 @@ function Header() {
                     </li>
                 </ul>
             </nav>
+            {/* 상담사 이름을 표시 */}
+            {counselorName && <div className="counselor-name">환영합니다, {counselorName}님!</div>}
         </header>
     );
 }

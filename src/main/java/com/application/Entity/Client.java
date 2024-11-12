@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.Set;
 
 @Entity
 @Table(name = "clients")
@@ -36,6 +37,15 @@ public class Client {
 
     @Column(name = "registration_status", length = 50, nullable = false)
     private String registrationStatus = "unassigned";
+
+    // 다대다 관계 설정
+    @ManyToMany
+    @JoinTable(
+            name = "counselor_clients",
+            joinColumns = @JoinColumn(name = "client_id"),
+            inverseJoinColumns = @JoinColumn(name = "counselor_id")
+    )
+    private Set<Counselor> counselors; // 여러 상담사와의 관계를 표현
 
     @ManyToOne
     @JoinColumn(name = "emotion_map_id", referencedColumnName = "id")

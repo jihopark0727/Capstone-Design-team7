@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import jakarta.persistence.*;
 import java.sql.Timestamp;
+import java.util.Set;
 
 @Entity
 @Table(name = "counselors")  // 데이터베이스 테이블 이름에 맞춰 수정
@@ -43,6 +44,10 @@ public class Counselor {
 
     @Column(name = "last_login_at")
     private Timestamp lastLoginAt;
+
+    // 다대다 관계 설정 (클라이언트와의 관계)
+    @ManyToMany(mappedBy = "counselors")
+    private Set<Client> clients;
 
     // 자동 생성 시간 설정
     @PrePersist
