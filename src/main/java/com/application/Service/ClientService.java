@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ClientService {
@@ -37,8 +38,8 @@ public class ClientService {
         String loggedInCounselorEmail = authentication.getName();
 
         // 로그인된 상담사의 정보를 데이터베이스에서 조회
-        Counselor counselor = counselorRepository.findByEmail(loggedInCounselorEmail)
-                .orElseThrow(() -> new RuntimeException("상담사 정보를 찾을 수 없습니다."));
+        Optional<Counselor> counselorOptional = counselorRepository.findByEmail(loggedInCounselorEmail);
+        Counselor counselor = counselorOptional.orElseThrow(() -> new RuntimeException("상담사 정보를 찾을 수 없습니다."));
 
         // 내담자와 상담사 간의 관계 설정
         client.getCounselors().add(counselor); // 상담사와의 매핑 추가
@@ -75,11 +76,11 @@ public class ClientService {
         String loggedInCounselorEmail = authentication.getName();
 
         // 이메일을 통해 상담사 정보를 조회
-        Counselor counselor = counselorRepository.findByEmail(loggedInCounselorEmail)
-                .orElseThrow(() -> new RuntimeException("상담사 정보를 찾을 수 없습니다."));
+        Optional<Counselor> counselorOptional = counselorRepository.findByEmail(loggedInCounselorEmail);
+        Counselor counselor = counselorOptional.orElseThrow(() -> new RuntimeException("상담사 정보를 찾을 수 없습니다."));
 
         // 상담사 ID를 통해 배정된 내담자 목록을 조회
-        List<Client> clients = clientRepository.findByCounselors_Id(counselor.getId());
+        List<Client> clients = clientRepository.findByCounselorsId(counselor.getId());
         return ResponseDto.setSuccessData("상담사의 내담자 조회 성공", clients, HttpStatus.OK);
     }
 }

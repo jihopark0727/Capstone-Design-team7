@@ -12,11 +12,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
     private AuthService authService;
@@ -26,26 +31,28 @@ public class AuthController {
 
     @PostMapping("/signUp")
     public ResponseDto<?> signUp(@RequestBody SignUpDto requestBody) {
-        ResponseDto<?> result = authService.signUp(requestBody);
-        return result;
+        return authService.signUp(requestBody);
     }
 
     @PostMapping("/login")
     public ResponseDto<?> login(@RequestBody LoginDto requestBody) {
-        ResponseDto<?> result = authService.login(requestBody);
-        return result;
+        return authService.login(requestBody);
     }
 
-    // 현재 로그인된 상담사 정보를 반환하는 엔드포인트 추가
     @GetMapping("/me")
     public ResponseDto<Counselor> getLoggedInCounselor() {
-        // 현재 인증된 사용자의 이메일을 가져옴
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String loggedInCounselorEmail = authentication.getName();
 
-        // 이메일로 상담사 정보 조회
+        if (authentication == null || !authentication.isAuthenticated()) {
+            logger.error("인증되지 않은 사용자가 /me 엔드포인트에 접근했습니다.");
+            throw new RuntimeException("인증되지 않은 사용자입니다.");
+        }
+
+        String loggedInCounselorEmail = authentication.getName();
+        logger.info("Logged in counselor email: {}", loggedInCounselorEmail);
+
         Optional<Counselor> counselorOpt = counselorRepository.findByEmail(loggedInCounselorEmail);
-        Counselor counselor = counselorOpt.orElseThrow(() -> new RuntimeException("상담사 정보를 찾을 수 없습니다."));
+        Counselor counselor = counselorOpt.orElseThrow(() -> new RuntimeException("상담사 정보를 찾을 수 없습니다. 이메일: " + loggedInCounselorEmail));
 
         return ResponseDto.setSuccessData("로그인된 상담사 정보 조회 성공", counselor, HttpStatus.OK);
     }

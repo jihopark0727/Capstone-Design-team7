@@ -16,17 +16,24 @@ function ClientsPage() {
     // 로그인된 상담사 정보 가져오기
     const fetchCounselorInfo = async () => {
       try {
-        const response = await axios.get('/api/auth/me');
+        const response = await axios.get('/api/auth/me', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
         setCounselorName(response.data.data.name); // 상담사 이름 설정
       } catch (error) {
         console.error("상담사 정보를 가져오는 중 오류 발생:", error);
       }
     };
 
-    // 내담자 목록 가져오기
     const fetchClients = async () => {
       try {
-        const response = await axios.get('/api/clients/counselor');
+        const response = await axios.get('/api/clients/counselor', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
         const fetchedClients = response.data.data;
         setClients(fetchedClients);
         setFilteredClients(fetchedClients);

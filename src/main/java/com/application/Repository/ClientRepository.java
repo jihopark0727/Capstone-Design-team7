@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface ClientRepository extends JpaRepository<Client, Long> {
-    List<Client> findByCounselors_Id(Long counselorId);  // 메서드 이름을 findByCounselors_Id로 수정하여 @ManyToMany 관계를 반영
+    List<Client> findByCounselorsId(Long counselorId);  // 메서드 이름을 findByCounselorsId로 수정하여 @ManyToMany 관계를 반영
 }
