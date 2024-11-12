@@ -69,14 +69,16 @@ public class ClientService {
     }
 
     // 로그인된 상담사에게 배정된 내담자 목록을 조회하는 메서드
-    public ResponseDto<List<Client>> getClientsByCounselorId() {
-        // 현재 로그인된 상담사의 ID를 가져옴
+    public ResponseDto<List<Client>> getClientsByLoggedInCounselor() {
+        // 현재 로그인된 상담사의 이메일을 가져옴
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String loggedInCounselorEmail = authentication.getName();
 
+        // 이메일을 통해 상담사 정보를 조회
         Counselor counselor = counselorRepository.findByEmail(loggedInCounselorEmail)
                 .orElseThrow(() -> new RuntimeException("상담사 정보를 찾을 수 없습니다."));
 
+        // 상담사 ID를 통해 배정된 내담자 목록을 조회
         List<Client> clients = clientRepository.findByCounselors_Id(counselor.getId());
         return ResponseDto.setSuccessData("상담사의 내담자 조회 성공", clients, HttpStatus.OK);
     }

@@ -33,7 +33,7 @@ public class ClientController {
     @GetMapping("/assigned-clients")
     public ResponseDto<List<Client>> getClientsByLoggedInCounselor() {
         Long counselorId = getLoggedInCounselorId(); // 현재 로그인한 상담사의 ID를 가져옴
-        return clientService.getClientsByCounselorId(counselorId);
+        return clientService.getClientsByLoggedInCounselor();
     }
 
     // 특정 내담자 조회

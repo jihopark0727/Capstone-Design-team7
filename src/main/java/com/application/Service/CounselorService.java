@@ -5,13 +5,15 @@ import com.application.Repository.CounselorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class CounselorService {
 
     @Autowired
     private CounselorRepository counselorRepository;
 
-    public Counselor findCounselorByEmail(String email) {
+    public Optional<Counselor> findCounselorByEmail(String email) {
         return counselorRepository.findByEmail(email);
     }
 
