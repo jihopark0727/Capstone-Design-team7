@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -45,7 +46,7 @@ public class Client {
             joinColumns = @JoinColumn(name = "client_id"),
             inverseJoinColumns = @JoinColumn(name = "counselor_id")
     )
-    private Set<Counselor> counselors; // 여러 상담사와의 관계를 표현
+    private Set<Counselor> counselors = new HashSet<>(); // 빈 HashSet으로 초기화하여 NullPointerException 방지
 
     @ManyToOne
     @JoinColumn(name = "emotion_map_id", referencedColumnName = "id")

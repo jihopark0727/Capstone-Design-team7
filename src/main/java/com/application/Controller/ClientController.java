@@ -30,6 +30,7 @@ public class ClientController {
     // 로그인된 상담사에게 배정된 내담자 목록 조회
     @GetMapping("/assigned-clients")
     public ResponseDto<List<Client>> getClientsByLoggedInCounselor() {
+        // ClientService에서 로그인된 상담사에 대한 내담자 목록을 가져옴
         return clientService.getClientsByLoggedInCounselor();
     }
 
@@ -42,7 +43,7 @@ public class ClientController {
     @GetMapping("/{clientId}/summary")
     public ResponseDto<List<EmotionMap>> getEmotionSummaryByClient(@PathVariable Long clientId) {
         List<EmotionMap> emotionSummary = emotionAnalysisService.getEmotionSummaryByClient(clientId);
-        return ResponseDto.setSuccessData(emotionSummary); // 적절한 성공 메시지와 데이터를 반환
+        return ResponseDto.setSuccessData(emotionSummary);
     }
 
     // 특정 내담자의 모든 세션 조회

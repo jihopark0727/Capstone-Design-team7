@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,14 +35,14 @@ public class ClientService {
 
     public ResponseDto<Client> addClient(Client client) {
         // 현재 로그인된 상담사의 정보를 가져옴
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String loggedInCounselorEmail = authentication.getName();
-
-        // 로그인된 상담사의 정보를 데이터베이스에서 조회
-        Optional<Counselor> counselorOptional = counselorRepository.findByEmail(loggedInCounselorEmail);
-        Counselor counselor = counselorOptional.orElseThrow(() -> new RuntimeException("상담사 정보를 찾을 수 없습니다."));
+        String loggedInCounselorEmail = getCurrentUserEmail();
+        Counselor counselor = counselorRepository.findByEmail(loggedInCounselorEmail)
+                .orElseThrow(() -> new RuntimeException("상담사 정보를 찾을 수 없습니다."));
 
         // 내담자와 상담사 간의 관계 설정
+        if (client.getCounselors() == null) {
+            client.setCounselors(new HashSet<>()); // counselors 필드가 null인 경우 초기화
+        }
         client.getCounselors().add(counselor); // 상담사와의 매핑 추가
         clientRepository.save(client);
 
@@ -72,15 +73,21 @@ public class ClientService {
     // 로그인된 상담사에게 배정된 내담자 목록을 조회하는 메서드
     public ResponseDto<List<Client>> getClientsByLoggedInCounselor() {
         // 현재 로그인된 상담사의 이메일을 가져옴
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String loggedInCounselorEmail = authentication.getName();
-
-        // 이메일을 통해 상담사 정보를 조회
-        Optional<Counselor> counselorOptional = counselorRepository.findByEmail(loggedInCounselorEmail);
-        Counselor counselor = counselorOptional.orElseThrow(() -> new RuntimeException("상담사 정보를 찾을 수 없습니다."));
+        String loggedInCounselorEmail = getCurrentUserEmail();
+        Counselor counselor = counselorRepository.findByEmail(loggedInCounselorEmail)
+                .orElseThrow(() -> new RuntimeException("상담사 정보를 찾을 수 없습니다."));
 
         // 상담사 ID를 통해 배정된 내담자 목록을 조회
         List<Client> clients = clientRepository.findByCounselorsId(counselor.getId());
         return ResponseDto.setSuccessData("상담사의 내담자 조회 성공", clients, HttpStatus.OK);
+    }
+
+    // 현재 로그인된 사용자의 이메일을 가져오는 메서드
+    private String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("인증된 사용자가 아닙니다.");
+        }
+        return authentication.getName();
     }
 }

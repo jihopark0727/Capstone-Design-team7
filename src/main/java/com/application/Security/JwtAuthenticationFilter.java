@@ -1,5 +1,7 @@
 package com.application.Security;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -16,6 +18,8 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
     private final TokenProvider tokenProvider;
 
     public JwtAuthenticationFilter(TokenProvider tokenProvider) {
@@ -30,14 +34,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 요청에서 JWT를 가져옴
             String jwt = getJwtFromRequest(request);
 
+            // 디버깅 로그: JWT 확인
+            logger.info("Extracted JWT: " + jwt);
+
             // 토큰이 유효한 경우 사용자 정보를 SecurityContext에 설정
             if (StringUtils.hasText(jwt)) {
                 String userEmail = tokenProvider.validateJwt(jwt);
                 if (userEmail != null) {
+                    // 디버깅 로그: 유효한 사용자 이메일 확인
+                    logger.info("Authenticated user: " + userEmail);
+
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(userEmail, null, null);
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    logger.warn("Invalid JWT token.");
                 }
             }
         } catch (Exception ex) {
