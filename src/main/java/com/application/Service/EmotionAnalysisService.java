@@ -55,15 +55,20 @@ public class EmotionAnalysisService {
     public ResponseDto<String> analyzeRecording(Long clientId, MultipartFile file) {
         try {
             File convFile = convertMultipartFileToFile(file);
-            String transcript = naverCloudClient.soundToText(convFile);
+            List<Map<String, String>> speakerSegments = naverCloudClient.soundToText(convFile);
 
             if (!convFile.delete()) {
                 System.out.println("Failed to delete the temporary file");
             }
 
-            if (transcript == null) {
+            if (speakerSegments == null || speakerSegments.isEmpty()) {
                 return ResponseDto.setFailed("텍스트 변환에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
+
+            // 각 speaker segment의 텍스트를 하나의 문장으로 합침
+            String transcript = speakerSegments.stream()
+                    .map(segment -> segment.get("text"))
+                    .collect(Collectors.joining(" "));
 
             String predictionResult = flaskCommunicationService.getPrediction(transcript);
 
@@ -83,7 +88,6 @@ public class EmotionAnalysisService {
             return ResponseDto.setFailed("녹음 분석 중 오류가 발생했습니다: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
 
     private File convertMultipartFileToFile(MultipartFile file) throws IOException {
         File convFile = File.createTempFile("upload_", Objects.requireNonNull(file.getOriginalFilename()));

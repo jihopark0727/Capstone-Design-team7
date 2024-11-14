@@ -10,11 +10,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
-public class TmpService {
+public class    TmpService {
     private final NaverCloudClient naverCloudClient;
 
     public TmpResponse getTextByFile(MultipartFile file) {
@@ -24,8 +26,9 @@ public class TmpService {
             convFile = convertMultipartFileToFile(file);
 
             // 변환된 파일을 NaverCloudClient에 전달하여 텍스트 변환 요청
-            String response = naverCloudClient.soundToText(convFile);
+            List<Map<String, String>> response = naverCloudClient.soundToText(convFile);
 
+            // TmpResponse 객체에 리스트로 변환된 텍스트 반환
             return new TmpResponse(response);
         } catch (Exception e) {
             throw new InvalidFileNameException("잘못된 파일", null);

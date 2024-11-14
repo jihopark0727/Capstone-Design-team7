@@ -1,8 +1,19 @@
 package com.application.Dto;
 
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
+import java.util.Map;
 
-@Data
 public class MediaTextResponse {
-    private String text;
+
+    @JsonProperty("segments")
+    private List<Map<String, Object>> segments;
+
+    public List<Map<String, Object>> getSegments() {
+        return segments;
+    }
+
+    public void setSegments(List<Map<String, Object>> segments) {
+        this.segments = segments;
+    }
 }

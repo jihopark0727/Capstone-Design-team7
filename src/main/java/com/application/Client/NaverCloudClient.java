@@ -1,5 +1,6 @@
 package com.application.Client;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.application.Dto.MediaTextResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +11,10 @@ import reactor.core.publisher.Mono;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class NaverCloudClient {
@@ -30,7 +35,9 @@ public class NaverCloudClient {
                 .build();
     }
 
-    public String soundToText(File file) {
+    public List<Map<String, String>> soundToText(File file) {
+        List<Map<String, String>> speakerSegments = new ArrayList<>();
+
         try {
             // 파일을 바이트 배열로 읽어온 후 전송
             byte[] fileContent = Files.readAllBytes(file.toPath());
@@ -45,21 +52,40 @@ public class NaverCloudClient {
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .bodyValue(fileContent)
                     .retrieve()
-                    .bodyToMono(String.class)
-                    .map(this::getTextFromResponse);
+                    .bodyToMono(String.class);
 
-            return responseMono.block();
+            String response = responseMono.block();
+            speakerSegments = parseSegments(response);
+
         } catch (Exception e) {
-            System.out.println(e);
-            return null;
+            System.out.println("Error processing audio file: " + e.getMessage());
         }
+
+        return speakerSegments;
     }
 
-    private String getTextFromResponse(String responseStr) {
+    private List<Map<String, String>> parseSegments(String response) {
+        List<Map<String, String>> speakerSegments = new ArrayList<>();
+        ObjectMapper objectMapper = new ObjectMapper();
+
         try {
-            return objectMapper.readValue(responseStr, MediaTextResponse.class).getText();
+            JsonNode root = objectMapper.readTree(response);
+            JsonNode segments = root.path("segments");
+
+            for (JsonNode segment : segments) {
+                Map<String, String> speakerSegment = new HashMap<>();
+                String speakerLabel = segment.path("speaker").path("label").asText();
+                String text = segment.path("text").asText();
+
+                speakerSegment.put("speaker", speakerLabel);
+                speakerSegment.put("text", text);
+
+                speakerSegments.add(speakerSegment);
+            }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            System.out.println("Error parsing segments: " + e.getMessage());
         }
+
+        return speakerSegments;
     }
 }
