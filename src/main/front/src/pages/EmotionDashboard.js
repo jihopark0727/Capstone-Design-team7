@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Header from '../components/Header';
 import ClientInfo from '../components/ClientInfo';
 import DataGrid from '../components/DataGrid';
 import GptSummary from '../components/GptSummary';
@@ -29,7 +28,6 @@ const EmotionDashboard = () => {
   if (isFirstVisit) {
     return (
       <div className="container">
-        <Header />
         <div className="onboarding">
           <h1>감정 대시보드에 오신 것을 환영합니다!</h1>
           <p>이 대시보드에서는 내담자의 감정 상태를 시각적으로 확인하고 분석할 수 있습니다.</p>
@@ -48,7 +46,6 @@ const EmotionDashboard = () => {
 
   return (
     <div className="container">
-      <Header />
       <div className="dashboard-content">
         <div className="left-sidebar">
           <ClientInfo />

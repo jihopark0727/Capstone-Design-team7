@@ -1,5 +1,5 @@
 // Header.js
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './Header.css'; // 스타일 파일 연결
 
@@ -23,9 +23,6 @@ function Header({ counselorName }) {
         <header>
             <div className="header-content">
                 <div className="logo">마음읽기</div>
-                <button onClick={toggleMenu} className="menu-toggle">
-                    메뉴
-                </button>
                 <nav className={isMenuOpen ? 'open' : ''}>
                     <ul>
                         <li>

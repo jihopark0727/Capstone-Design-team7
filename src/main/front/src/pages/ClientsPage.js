@@ -29,7 +29,7 @@ function ClientsPage() {
 
     const fetchClients = async () => {
       try {
-        const response = await axios.get('/api/clients/counselor', {
+        const response = await axios.get('/api/clients/assigned-clients', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -62,7 +62,11 @@ function ClientsPage() {
 
   const handleRegistrationSubmit = async (newClient) => {
     try {
-      const response = await axios.post('/api/clients', newClient);
+      const response = await axios.post('/api/clients', newClient, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       const savedClient = response.data.data;
       setClients([...clients, savedClient]);
       setFilteredClients([...clients, savedClient]);
@@ -72,6 +76,7 @@ function ClientsPage() {
     }
     setShowRegistrationForm(false);
   };
+
 
   const handleRegistrationCancel = () => {
     setShowRegistrationForm(false);
