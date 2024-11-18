@@ -1,12 +1,10 @@
 // SignUpPage.js
 import React from 'react';
-import Header from '../components/Header';
 import SignUpForm from '../components/SignUpForm';
 
 function SignUpPage() {
     return (
         <div className="container">
-            <Header />
             <div className="main-content">
                 <div className="left-content">
                     <h2>새로운 여정을 시작하세요</h2>
