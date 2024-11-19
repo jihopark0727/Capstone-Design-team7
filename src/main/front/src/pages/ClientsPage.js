@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Header from '../components/Header';
 import SearchBar from '../components/SearchBar';
 import ClientTable from '../components/ClientTable';
 import ClientRegistrationForm from '../components/ClientRegistrationForm';
@@ -9,7 +8,6 @@ function ClientsPage() {
   const [clients, setClients] = useState([]);
   const [filteredClients, setFilteredClients] = useState([]);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
-  const [counselorName, setCounselorName] = useState('');
 
   // Axios 기본 설정에 Authorization 헤더 추가
   useEffect(() => {
@@ -102,7 +100,6 @@ function ClientsPage() {
 
   return (
       <div className="container">
-        <Header counselorName={counselorName} />
         <div className="controls">
           <SearchBar onSearch={handleSearch} />
           <button className="add-client" onClick={handleAddClient}>

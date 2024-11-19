@@ -8,8 +8,15 @@ function LoginForm() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false); // 모달 상태 관리
+    const [signUpData, setSignUpData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        phoneNumber: '',
+    });
     const navigate = useNavigate();
 
+    // 로그인 처리
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
@@ -17,9 +24,6 @@ function LoginForm() {
                 email,
                 password,
             });
-
-            // API 호출 성공
-            console.log('API 호출 성공:', response);
 
             if (response.data.result) {
                 alert('상담사 로그인에 성공하였습니다.');
@@ -33,10 +37,8 @@ function LoginForm() {
                     console.error('토큰이 응답에 포함되지 않았습니다.');
                 }
 
-                // 클라이언트 페이지로 이동
-                setTimeout(() => {
-                    navigate('/clients');
-                }, 500);
+                // FileUploadPage로 이동
+                navigate('/upload');
             } else {
                 alert('로그인에 실패했습니다. 다시 시도해 주세요.');
             }
@@ -50,6 +52,33 @@ function LoginForm() {
         }
     };
 
+    // 회원가입 처리
+    const handleSignUp = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await axios.post('http://localhost:8080/api/auth/signup', signUpData);
+            if (response.data.result) {
+                alert('회원가입이 완료되었습니다. 로그인해 주세요.');
+                setIsModalOpen(false);
+            } else {
+                alert('회원가입에 실패했습니다. 다시 시도해 주세요.');
+            }
+        } catch (error) {
+            console.error('회원가입 오류:', error.response || error.message);
+            alert(error.response?.data?.message || '회원가입에 실패했습니다.');
+        }
+    };
+
+    // 회원가입 폼 입력값 변경 처리
+    const handleSignUpChange = (e) => {
+        const { name, value } = e.target;
+        setSignUpData((prevData) => ({
+            ...prevData,
+            [name]: value,
+        }));
+    };
+
+    // 모달 열기/닫기
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
 
@@ -106,7 +135,7 @@ function LoginForm() {
                         <button className="close-button" onClick={closeModal}>
                             &times;
                         </button>
-                        <form className="sign-up-page">
+                        <form className="sign-up-page" onSubmit={handleSignUp}>
                             <div className="login">
                                 <div className="text--2">회원가입</div>
                                 <div className="content">
@@ -115,7 +144,10 @@ function LoginForm() {
                                             <label className="text--3">이름</label>
                                             <input
                                                 type="text"
+                                                name="name"
                                                 placeholder="이름을 입력하세요."
+                                                value={signUpData.name}
+                                                onChange={handleSignUpChange}
                                                 className="input-field"
                                                 required
                                             />
@@ -124,7 +156,10 @@ function LoginForm() {
                                             <label className="text--4">이메일</label>
                                             <input
                                                 type="email"
+                                                name="email"
                                                 placeholder="로그인에 사용할 이메일을 입력해 주세요."
+                                                value={signUpData.email}
+                                                onChange={handleSignUpChange}
                                                 className="input-field"
                                                 required
                                             />
@@ -133,7 +168,10 @@ function LoginForm() {
                                             <label className="text--5">비밀번호</label>
                                             <input
                                                 type="password"
+                                                name="password"
                                                 placeholder="8~16자의 영문 대소문자, 숫자, 특수문자만 가능합니다."
+                                                value={signUpData.password}
+                                                onChange={handleSignUpChange}
                                                 className="input-field"
                                                 required
                                             />
@@ -142,7 +180,10 @@ function LoginForm() {
                                             <label className="text--6">전화번호</label>
                                             <input
                                                 type="text"
+                                                name="phoneNumber"
                                                 placeholder="연락 가능한 번호를 입력해 주세요."
+                                                value={signUpData.phoneNumber}
+                                                onChange={handleSignUpChange}
                                                 className="input-field"
                                             />
                                         </div>
