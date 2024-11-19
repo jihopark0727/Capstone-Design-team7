@@ -7,10 +7,11 @@ import lombok.NoArgsConstructor;
 
 import jakarta.persistence.*;
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "counselors")  // 데이터베이스 테이블 이름에 맞춰 수정
+@Table(name = "counselors")  // 테이블 이름
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,43 +23,59 @@ public class Counselor {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String email;
+    private String email; // 상담사의 이메일 (고유값)
 
     @Column(nullable = false)
-    private String password;
+    private String password; // 상담사의 비밀번호
 
-    @Column(nullable = false)
-    private String name;
+    @Column(nullable = false, length = 100)
+    private String name; // 상담사의 이름
 
     @Column(name = "phone_number", length = 20)
-    private String phoneNumber;
+    private String phoneNumber; // 전화번호
 
     @Column(columnDefinition = "TEXT")
-    private String token;
+    private String token; // 인증 토큰
 
     @Column(name = "created_at", updatable = false)
-    private Timestamp createdAt;
+    private Timestamp createdAt; // 생성 시간
 
     @Column(name = "updated_at")
-    private Timestamp updatedAt;
+    private Timestamp updatedAt; // 수정 시간
 
     @Column(name = "last_login_at")
-    private Timestamp lastLoginAt;
+    private Timestamp lastLoginAt; // 마지막 로그인 시간
 
-    // 다대다 관계 설정 (클라이언트와의 관계)
-    @ManyToMany(mappedBy = "counselors")
-    private Set<Client> clients;
+    // 다대다 관계 설정 (내담자와의 관계)
+    @ManyToMany
+    @JoinTable(
+            name = "counselor_clients", // 상담사-내담자 연결 테이블
+            joinColumns = @JoinColumn(name = "counselor_id"),
+            inverseJoinColumns = @JoinColumn(name = "client_id")
+    )
+    private Set<Client> clients = new HashSet<>(); // 상담사와 연결된 내담자들
 
-    // 자동 생성 시간 설정
+    // 생성 시간 설정
     @PrePersist
     protected void onCreate() {
         this.createdAt = new Timestamp(System.currentTimeMillis());
         this.updatedAt = this.createdAt;
     }
 
-    // 업데이트 시간 자동 갱신
+    // 수정 시간 설정
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = new Timestamp(System.currentTimeMillis());
+    }
+
+    // 내담자 관리 메서드
+    public void addClient(Client client) {
+        this.clients.add(client);
+        client.getCounselors().add(this); // 양방향 관계 설정
+    }
+
+    public void removeClient(Client client) {
+        this.clients.remove(client);
+        client.getCounselors().remove(this); // 양방향 관계 해제
     }
 }
