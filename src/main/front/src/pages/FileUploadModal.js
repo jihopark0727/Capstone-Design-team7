@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // React Router를 사용하여 페이지 이동
-import './FileUploadPage.css';
+import './FileUploadModal.css';
 
 function FileUploadPage({ onClose }) {
     const navigate = useNavigate(); // 페이지 이동을 위한 navigate 함수

@@ -64,6 +64,7 @@ public class AuthService {
         String email = dto.getEmail();
         String password = dto.getPassword();
 
+        // 이메일로 상담사 계정 찾기
         Optional<Counselor> counselorOpt = userRepository.findByEmail(email);
         if (counselorOpt.isEmpty()) {
             return ResponseDto.setFailed("입력하신 이메일로 등록된 상담사 계정이 존재하지 않습니다.", HttpStatus.NOT_FOUND);
@@ -83,16 +84,23 @@ public class AuthService {
             return ResponseDto.setFailed("토큰 생성에 실패하였습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        // CounselorDto 객체로 변환
+        // CounselorDto 객체 생성
         CounselorDto counselorDto = new CounselorDto(
                 counselor.getId(),
                 counselor.getEmail(),
-                counselor.getName(),
+                counselor.getName(), // 상담사 이름
                 counselor.getPhoneNumber()
         );
 
-        // 로그인 응답 생성
-        LoginResponseDto loginResponseDto = new LoginResponseDto(token, exprTime, counselorDto);
+        // LoginResponseDto 생성
+        LoginResponseDto loginResponseDto = new LoginResponseDto(
+                token, // JWT 토큰
+                exprTime, // 토큰 유효 기간
+                counselorDto // 상담사 정보
+        );
+
+        // 성공 응답
         return ResponseDto.setSuccessData("상담사 로그인에 성공하였습니다.", loginResponseDto, HttpStatus.OK);
     }
+
 }

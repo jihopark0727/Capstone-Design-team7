@@ -30,7 +30,7 @@ public class AuthController {
     private CounselorRepository counselorRepository;
 
     @PostMapping("/signUp")
-    public ResponseDto<?> signUp(@RequestBody SignUpDto requestBody) {
+    public ResponseDto<?> signup(@RequestBody SignUpDto requestBody) {
         return authService.signUp(requestBody);
     }
 

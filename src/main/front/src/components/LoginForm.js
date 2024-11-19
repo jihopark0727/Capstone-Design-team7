@@ -1,57 +1,73 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import SignUpModal from './SignUpModal'; // 모달 컴포넌트 추가
 import './LoginForm.css'; // 로그인 스타일
-import './SignUpForm.css'; // 회원가입 스타일
 
-function LoginForm() {
+function LoginForm({ setIsLoggedIn }) { // props로 setIsLoggedIn 받음
+
+    console.log('setIsLoggedIn:', typeof setIsLoggedIn); // "function"이어야 정상
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false); // 모달 상태 관리
+    const [signUpData, setSignUpData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        phoneNumber: '',
+    });
     const navigate = useNavigate();
 
+    // 로그인 처리
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:8080/api/auth/login', {
-                email,
-                password,
-            });
+            const response = await axios.post('/api/auth/login', { email, password });
 
-            // API 호출 성공
-            console.log('API 호출 성공:', response);
+            console.log('로그인 응답:', response.data); // 응답 로그 추가
 
-            if (response.data.result) {
-                alert('상담사 로그인에 성공하였습니다.');
+            if (response.data?.result) {
+                alert('로그인 성공');
+                const name = response.data.data?.counselor?.name;
+                const token = response.data.data?.token;
 
-                // 토큰 저장
-                const token = response.data.data.token;
-                if (token) {
-                    localStorage.setItem('token', token);
-                    console.log('토큰이 localStorage에 저장되었습니다.');
-                } else {
-                    console.error('토큰이 응답에 포함되지 않았습니다.');
-                }
+                if (name) localStorage.setItem('name', name);
+                if (token) localStorage.setItem('token', token);
+                console.log(typeof setIsLoggedIn); // "function"이어야 정상
 
-                // 클라이언트 페이지로 이동
-                setTimeout(() => {
-                    navigate('/clients');
-                }, 500);
+                setIsLoggedIn(true); // 로그인 상태 업데이트
+                navigate('/upload'); // 이동
             } else {
-                alert('로그인에 실패했습니다. 다시 시도해 주세요.');
+                throw new Error('로그인 실패: 서버에서 인증 거부'); // 명확한 에러 처리
             }
         } catch (error) {
-            console.error('로그인 오류:', error.response || error.message);
-            if (error.response && error.response.status === 401) {
-                alert('잘못된 이메일 또는 비밀번호입니다.');
-            } else {
-                alert('로그인에 실패했습니다. 다시 시도해 주세요.');
-            }
+            console.error('로그인 요청 오류:', error); // 에러 로그 추가
+            alert('로그인 오류: 서버 문제 또는 네트워크 오류가 발생했습니다.');
         }
     };
 
-    const openModal = () => setIsModalOpen(true);
-    const closeModal = () => setIsModalOpen(false);
+
+    // 회원가입 처리
+    const handleSignUp = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await axios.post('http://localhost:8080/api/auth/signUp', signUpData);
+            if (response.data.result) {
+                alert('회원가입이 완료되었습니다.');
+                setIsModalOpen(false);
+            } else {
+                alert('회원가입에 실패했습니다.');
+            }
+        } catch (error) {
+            alert('회원가입 오류');
+        }
+    };
+
+    // 회원가입 입력값 핸들러
+    const handleSignUpChange = (e) => {
+        const { name, value } = e.target;
+        setSignUpData((prevData) => ({ ...prevData, [name]: value }));
+    };
 
     return (
         <div>
@@ -92,7 +108,7 @@ function LoginForm() {
                     <button
                         type="button"
                         className="button-1"
-                        onClick={openModal}
+                        onClick={() => setIsModalOpen(true)}
                     >
                         <span className="text--1">회원가입</span>
                     </button>
@@ -100,70 +116,13 @@ function LoginForm() {
             </form>
 
             {/* 회원가입 모달 */}
-            {isModalOpen && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <button className="close-button" onClick={closeModal}>
-                            &times;
-                        </button>
-                        <form className="sign-up-page">
-                            <div className="login">
-                                <div className="text--2">회원가입</div>
-                                <div className="content">
-                                    <div className="inputs">
-                                        <div className="input1">
-                                            <label className="text--3">이름</label>
-                                            <input
-                                                type="text"
-                                                placeholder="이름을 입력하세요."
-                                                className="input-field"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="input2">
-                                            <label className="text--4">이메일</label>
-                                            <input
-                                                type="email"
-                                                placeholder="로그인에 사용할 이메일을 입력해 주세요."
-                                                className="input-field"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="input3">
-                                            <label className="text--5">비밀번호</label>
-                                            <input
-                                                type="password"
-                                                placeholder="8~16자의 영문 대소문자, 숫자, 특수문자만 가능합니다."
-                                                className="input-field"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="input3-1">
-                                            <label className="text--6">전화번호</label>
-                                            <input
-                                                type="text"
-                                                placeholder="연락 가능한 번호를 입력해 주세요."
-                                                className="input-field"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="text">
-                                <input type="checkbox" className="checkbox" required />
-                                <label className="text-------">
-                                    개인정보 보호정책 및 약관을 읽었으며 이에 동의합니다.
-                                </label>
-                            </div>
-                            <div className="bottom">
-                                <button type="submit" className="button">
-                                    <span className="text-">회원가입</span>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <SignUpModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                signUpData={signUpData}
+                handleChange={handleSignUpChange}
+                handleSubmit={handleSignUp}
+            />
         </div>
     );
 }

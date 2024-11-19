@@ -6,9 +6,11 @@ function SignUpForm() {
     const [formData, setFormData] = useState({
         email: '',
         password: '',
+        confirmPassword: '', // 비밀번호 확인 필드 추가
         name: '',
         phoneNumber: '',
     });
+
 
     const [agreeToPolicy, setAgreeToPolicy] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -92,7 +94,7 @@ function SignUpForm() {
                                             />
                                         </div>
                                         <div className="input3">
-                                            <label className="text--5">비밀번호</label>
+                                            <label className="text--5">비밀번호12</label>
                                             <input
                                                 type="password"
                                                 name="password"
@@ -103,8 +105,20 @@ function SignUpForm() {
                                                 required
                                             />
                                         </div>
-                                        <div className="input3-1">
-                                            <label className="text--6">전화번호</label>
+                                        <div className="input4">
+                                            <label className="text--6">비밀번호 확인</label>
+                                            <input
+                                                type="password"
+                                                name="confirmPassword"
+                                                value={formData.confirmPassword}
+                                                onChange={handleChange}
+                                                placeholder="비밀번호를 다시 입력해 주세요."
+                                                className="input-field"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="input5">
+                                            <label className="text--7">전화번호</label>
                                             <input
                                                 type="text"
                                                 name="phoneNumber"

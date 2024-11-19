@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
-import FileUploadPage from './FileUploadPage';
-import './UploadPage.css'; 
+import FileUploadPage from './FileUploadModal';
+import './UploadPage.css';
 
-function UploadPage({ name = '사용자' }) {
-
+function UploadPage() {
+    const storedName = localStorage.getItem('name'); // 로컬 스토리지에서 이름 가져오기
     const [isFileUploadOpen, setFileUploadOpen] = useState(false);
 
-        // 파일 업로드 팝업 열기
-        const handleOpenFileUpload = () => {
-            setFileUploadOpen(true);
-        };
+    // 파일 업로드 팝업 열기
+    const handleOpenFileUpload = () => {
+        setFileUploadOpen(true);
+    };
 
-            // 파일 업로드 팝업 닫기
+    // 파일 업로드 팝업 닫기
     const handleCloseFileUpload = () => {
         setFileUploadOpen(false);
     };
-    
+
     return (
         <div className="upload-container">
             {/* 클라이언트 페이지 메인 콘텐츠 */}
             <div className="upload-content">
                 <div className="upload-text">
-                    <h1>안녕하세요 {name}님!</h1>
+                    <h1>안녕하세요 {storedName}님!</h1> {/* 사용자 이름 표시 */}
                     <p>분석할 음성 파일을 업로드하세요.</p>
                 </div>
                 <div className="upload-description">
@@ -40,5 +40,6 @@ function UploadPage({ name = '사용자' }) {
         </div>
     );
 }
+
 
 export default UploadPage;
