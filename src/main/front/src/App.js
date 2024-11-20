@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Header from './components/Header'; // Header 컴포넌트 임포트
 import HomePage from './pages/HomePage';
 import ClientsPage from './pages/ClientsPage';
@@ -28,9 +28,16 @@ function App() {
                 {/* 페이지 콘텐츠 */}
                 <div className="content-container">
                     <Routes>
+                        {/* 로그인 상태에 따라 리다이렉션 */}
                         <Route
                             path="/"
-                            element={<HomePage setIsLoggedIn={setIsLoggedIn} />}
+                            element={
+                                isLoggedIn ? (
+                                    <Navigate to="/upload" replace />
+                                ) : (
+                                    <HomePage setIsLoggedIn={setIsLoggedIn} />
+                                )
+                            }
                         />
 
                         <Route

@@ -44,21 +44,8 @@ public class Client {
     @Column(name = "registration_status", length = 50, nullable = false)
     private String registrationStatus = "unassigned"; // 기본값 설정
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "client_topics", // 클라이언트-주제 매핑 테이블
-            joinColumns = @JoinColumn(name = "client_id"),
-            inverseJoinColumns = @JoinColumn(name = "topic_id")
-    )
-    private Set<CounselingTopic> counselingTopics = new HashSet<>(); // 다대다 관계 추가
-
-    @ManyToMany
-    @JoinTable(
-            name = "counselor_clients", // 클라이언트-상담사 매핑 테이블
-            joinColumns = @JoinColumn(name = "client_id"),
-            inverseJoinColumns = @JoinColumn(name = "counselor_id")
-    )
-    private Set<Counselor> counselors = new HashSet<>(); // 상담사와의 다대다 관계 추가
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CounselorClient> counselorClients = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "emotion_map_id", referencedColumnName = "id")

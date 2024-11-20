@@ -46,14 +46,9 @@ public class Counselor {
     @Column(name = "last_login_at")
     private Timestamp lastLoginAt; // 마지막 로그인 시간
 
-    // 다대다 관계 설정 (내담자와의 관계)
-    @ManyToMany
-    @JoinTable(
-            name = "counselor_clients", // 상담사-내담자 연결 테이블
-            joinColumns = @JoinColumn(name = "counselor_id"),
-            inverseJoinColumns = @JoinColumn(name = "client_id")
-    )
-    private Set<Client> clients = new HashSet<>(); // 상담사와 연결된 내담자들
+    @OneToMany(mappedBy = "counselor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CounselorClient> counselorClients = new HashSet<>();
+
 
     // 생성 시간 설정
     @PrePersist
@@ -68,14 +63,4 @@ public class Counselor {
         this.updatedAt = new Timestamp(System.currentTimeMillis());
     }
 
-    // 내담자 관리 메서드
-    public void addClient(Client client) {
-        this.clients.add(client);
-        client.getCounselors().add(this); // 양방향 관계 설정
-    }
-
-    public void removeClient(Client client) {
-        this.clients.remove(client);
-        client.getCounselors().remove(this); // 양방향 관계 해제
-    }
 }

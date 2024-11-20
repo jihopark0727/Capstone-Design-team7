@@ -11,7 +11,6 @@ const ClientInfo = ({ client }) => {
             <h2>{client.name}</h2>
             <p>상태: {client.registrationStatus}</p>
             <p>상담 주제: {client.topic || 'N/A'}</p>
-            <p>소속: {client.affiliation || 'N/A'}</p>
             <p>연락처: {client.contact || 'N/A'}</p>
             <p>성별: {client.gender}</p>
             <p>나이: {client.age}</p>

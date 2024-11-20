@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 
 function ClientRegistrationForm({ onSubmit, onCancel }) {
     const [client, setClient] = useState({
-        status: '신규',
+        registrationStatus: '신규',
         name: '',
         counselingTopics: '', // 상담 주제를 콤마로 입력받음
-        affiliation: '',
         contactNumber: '',
         gender: '',
         age: '',
@@ -40,10 +39,9 @@ function ClientRegistrationForm({ onSubmit, onCancel }) {
 
         // 폼 초기화
         setClient({
-            status: '신규',
+            registrationStatus: '신규',
             name: '',
             counselingTopics: '',
-            affiliation: '',
             contactNumber: '',
             gender: '',
             age: '',
@@ -56,7 +54,7 @@ function ClientRegistrationForm({ onSubmit, onCancel }) {
             <h2>내담자 등록</h2>
             <div>
                 <label>상태:</label>
-                <select name="status" value={client.status} onChange={handleChange}>
+                <select name="registrationStatus" value={client.registrationStatus} onChange={handleChange}>
                     <option value="신규">신규</option>
                     <option value="진행중">진행중</option>
                 </select>
@@ -74,15 +72,6 @@ function ClientRegistrationForm({ onSubmit, onCancel }) {
                     onChange={handleChange}
                     placeholder="예: 진로 상담, 스트레스 관리"
                     required
-                />
-            </div>
-            <div>
-                <label>소속:</label>
-                <input
-                    type="text"
-                    name="affiliation"
-                    value={client.affiliation}
-                    onChange={handleChange}
                 />
             </div>
             <div>
@@ -130,7 +119,7 @@ function ClientRegistrationForm({ onSubmit, onCancel }) {
                     onClick={() => {
                         onCancel();
                         setClient({
-                            status: '신규',
+                            registrationStatus: '신규',
                             name: '',
                             counselingTopics: '',
                             affiliation: '',

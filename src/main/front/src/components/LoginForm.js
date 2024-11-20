@@ -24,8 +24,6 @@ function LoginForm({ setIsLoggedIn }) { // props로 setIsLoggedIn 받음
         try {
             const response = await axios.post('/api/auth/login', { email, password });
 
-            console.log('로그인 응답:', response.data); // 응답 로그 추가
-
             if (response.data?.result) {
                 alert('로그인 성공');
                 const name = response.data.data?.counselor?.name;
@@ -33,7 +31,6 @@ function LoginForm({ setIsLoggedIn }) { // props로 setIsLoggedIn 받음
 
                 if (name) localStorage.setItem('name', name);
                 if (token) localStorage.setItem('token', token);
-                console.log(typeof setIsLoggedIn); // "function"이어야 정상
 
                 setIsLoggedIn(true); // 로그인 상태 업데이트
                 navigate('/upload'); // 이동

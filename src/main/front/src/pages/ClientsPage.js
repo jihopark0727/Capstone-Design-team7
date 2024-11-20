@@ -50,45 +50,48 @@ function ClientsPage() {
 
   // 내담자 등록 처리
   const handleRegistrationSubmit = async (newClient) => {
-    try {
-      console.log('Submitting new client data:', newClient);
+      try {
+          console.log('Submitting new client data:', newClient);
 
-      // counselingTopics를 문자열로 변환
-      const formattedClient = {
-        ...newClient,
-        counselingTopics: Array.isArray(newClient.counselingTopics)
-            ? newClient.counselingTopics.join(',') // 배열을 문자열로 변환
-            : newClient.counselingTopics, // 이미 문자열이면 그대로 사용
-      };
+          // counselingTopics를 문자열로 변환
+          const formattedClient = {
+              ...newClient,
+              counselingTopics: Array.isArray(newClient.counselingTopics)
+                  ? newClient.counselingTopics.join(',')
+                  : newClient.counselingTopics,
+          };
 
-      console.log('Formatted client data:', formattedClient);
+          console.log('Formatted client data:', formattedClient);
 
-      // JWT 토큰 가져오기
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('인증 토큰이 없습니다. 다시 로그인하세요.');
-        return;
+          // JWT 포함한 POST 요청
+          const response = await axios.post('/api/clients', formattedClient, {
+              headers: {
+                  Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+          });
+
+          const savedClient = response.data.data;
+
+          // 상태 업데이트
+          setClients((prevClients) => [
+              ...prevClients,
+              { client: savedClient, topic: newClient.counselingTopics },
+          ]);
+
+          setFilteredClients((prevFiltered) => [
+              ...prevFiltered,
+              { client: savedClient, topic: newClient.counselingTopics },
+          ]);
+
+          alert('내담자 등록 성공!');
+      } catch (error) {
+          console.error('내담자를 등록하는 중 오류 발생:', error.response || error.message);
+          alert(error.response?.data?.message || '내담자를 등록하는 중 오류가 발생했습니다.');
       }
 
-      // JWT 포함한 POST 요청
-      const response = await axios.post('/api/clients', formattedClient, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const savedClient = response.data.data;
-
-      setClients((prevClients) => [...prevClients, savedClient]);
-      setFilteredClients((prevFiltered) => [...prevFiltered, savedClient]);
-
-      alert('내담자 등록 성공!');
-    } catch (error) {
-      console.error('내담자를 등록하는 중 오류 발생:', error.response || error.message);
-      alert(error.response?.data?.message || '내담자를 등록하는 중 오류가 발생했습니다.');
-    }
-    setShowRegistrationForm(false);
+      setShowRegistrationForm(false);
   };
+
 
   // 폼 닫기 처리
   const handleRegistrationCancel = () => setShowRegistrationForm(false);

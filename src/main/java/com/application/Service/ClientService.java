@@ -2,11 +2,11 @@ package com.application.Service;
 
 import com.application.Dto.ResponseDto;
 import com.application.Entity.Client;
-import com.application.Entity.CounselingTopic;
 import com.application.Entity.Counselor;
+import com.application.Entity.CounselorClient;
 import com.application.Repository.ClientRepository;
+import com.application.Repository.CounselorClientRepository;
 import com.application.Repository.CounselorRepository;
-import com.application.Repository.CounselingTopicRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -25,15 +25,14 @@ public class ClientService {
 
     private final ClientRepository clientRepository;
     private final CounselorRepository counselorRepository;
-    private final CounselingTopicRepository counselingTopicRepository;
+    private final CounselorClientRepository counselorClientRepository;
 
     @Autowired
     public ClientService(ClientRepository clientRepository,
-                         CounselorRepository counselorRepository,
-                         CounselingTopicRepository counselingTopicRepository) {
+                         CounselorRepository counselorRepository, CounselorClientRepository counselorClientRepository) {
         this.clientRepository = clientRepository;
         this.counselorRepository = counselorRepository;
-        this.counselingTopicRepository = counselingTopicRepository;
+        this.counselorClientRepository = counselorClientRepository;
     }
 
     public ResponseDto<Client> getClientById(Long id) {
@@ -42,37 +41,28 @@ public class ClientService {
                 .orElse(ResponseDto.setFailed("내담자 ID가 존재하지 않습니다.", HttpStatus.NOT_FOUND));
     }
 
-    public ResponseDto<Client> addClient(Client client, List<String> topicNames) {
-        // 현재 로그인된 상담사의 정보를 가져옴
+    public ResponseDto<Client> addClient(Client client, String topic) {
+        // 현재 로그인된 상담사 정보 가져오기
         Counselor counselor = getLoggedInCounselor();
 
-        // 내담자와 상담사 간의 관계 설정
-        if (client.getCounselors() == null) {
-            client.setCounselors(new HashSet<>());
-        }
-        client.getCounselors().add(counselor);
+        // 내담자 저장
+        Client savedClient = clientRepository.save(client);
 
-        // 상담 주제 설정
-        Set<CounselingTopic> topics = topicNames.stream()
-                .map(this::getOrCreateTopic)
-                .collect(Collectors.toSet());
+        // 상담사-내담자 관계 설정 및 주제 저장
+        CounselorClient counselorClient = CounselorClient.builder()
+                .counselor(counselor)
+                .client(savedClient)
+                .topic(topic)
+                .build();
 
-        // 내담자와 상담 주제 연결
-        if (client.getCounselingTopics() == null) {
-            client.setCounselingTopics(new HashSet<>());
-        }
-        client.getCounselingTopics().addAll(topics);
+        counselorClientRepository.save(counselorClient); // 새로운 테이블에 저장
 
-        logger.info("Adding client with details: {}", client);
-
-        // DB에 내담자 저장
-        clientRepository.save(client);
-
-        return ResponseDto.setSuccessData("내담자 추가 성공", client, HttpStatus.CREATED);
+        return ResponseDto.setSuccessData("내담자 추가 성공", savedClient, HttpStatus.CREATED);
     }
 
-    public ResponseDto<Client> updateClient(Long id, Client updatedClient, List<String> topicNames) {
-        return clientRepository.findById(id)
+
+    public ResponseDto<Client> updateClient(Long clientId, Client updatedClient, String newTopic) {
+        return clientRepository.findById(clientId)
                 .map(client -> {
                     // 내담자 정보 업데이트
                     client.setName(updatedClient.getName());
@@ -81,19 +71,21 @@ public class ClientService {
                     client.setContactNumber(updatedClient.getContactNumber());
                     client.setBirthDate(updatedClient.getBirthDate());
 
-                    // 상담 주제 업데이트
-                    Set<CounselingTopic> topics = topicNames.stream()
-                            .map(this::getOrCreateTopic)
-                            .collect(Collectors.toSet());
-                    client.setCounselingTopics(topics);
-
-                    logger.info("Updating client with details: {}", client);
-
                     clientRepository.save(client);
-                    return ResponseDto.setSuccessData("내담자 정보 수정 성공", client, HttpStatus.OK);
+
+                    // 상담사-내담자 관계에서 주제 업데이트
+                    Counselor counselor = getLoggedInCounselor();
+                    CounselorClient counselorClient = counselorClientRepository
+                            .findByCounselorAndClient(counselor, client)
+                            .orElseThrow(() -> new RuntimeException("관계가 존재하지 않습니다."));
+                    counselorClient.setTopic(newTopic);
+                    counselorClientRepository.save(counselorClient);
+
+                    return ResponseDto.setSuccessData("내담자 정보 및 주제 업데이트 성공", client, HttpStatus.OK);
                 })
                 .orElse(ResponseDto.setFailed("내담자 ID가 존재하지 않습니다.", HttpStatus.NOT_FOUND));
     }
+
 
     public ResponseDto<?> deleteClient(Long id) {
         if (clientRepository.existsById(id)) {
@@ -104,28 +96,41 @@ public class ClientService {
         }
     }
 
-    public ResponseDto<List<Client>> getClientsByLoggedInCounselor() {
-        // 현재 로그인된 상담사 정보 가져오기
+    public ResponseDto<List<Map<String, Object>>> getClientsByLoggedInCounselor() {
         Counselor counselor = getLoggedInCounselor();
 
-        // 상담사 ID를 통해 배정된 내담자 목록 조회
-        List<Client> clients = clientRepository.findByCounselorsId(counselor.getId());
-        return ResponseDto.setSuccessData("상담사의 내담자 조회 성공", clients, HttpStatus.OK);
+        logger.info("Logged-in counselor: {}", counselor);
+
+        // 상담사-내담자 관계 조회
+        List<CounselorClient> counselorClients = counselorClientRepository.findByCounselor(counselor);
+        logger.info("Counselor clients found: {}", counselorClients);
+        counselorClients.forEach(cc -> logger.info("Client: {}, Topic: {}", cc.getClient(), cc.getTopic()));
+
+        // 필요한 데이터 변환 및 topic에서 [ ] 제거
+        List<Map<String, Object>> result = counselorClients.stream()
+                .map(cc -> Map.of(
+                        "client", cc.getClient(),
+                        "topic", removeBrackets(cc.getTopic()) // topic의 대괄호 제거
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseDto.setSuccessData("상담사의 내담자 조회 성공", result, HttpStatus.OK);
     }
 
-    // 주제를 가져오거나 새로 생성하는 메서드
-    private CounselingTopic getOrCreateTopic(String topicName) {
-        return counselingTopicRepository.findByTopicName(topicName)
-                .orElseGet(() -> {
-                    CounselingTopic newTopic = new CounselingTopic();
-                    newTopic.setTopicName(topicName);
-                    return counselingTopicRepository.save(newTopic);
-                });
+    // Helper 메서드: 문자열에서 대괄호 제거
+    private String removeBrackets(String topic) {
+        if (topic == null || topic.isEmpty()) {
+            return "N/A"; // topic이 없을 경우 기본값
+        }
+        return topic.replace("[", "").replace("]", ""); // 대괄호 제거
     }
+
+
 
     // 현재 로그인된 상담사 정보 가져오기
     private Counselor getLoggedInCounselor() {
         String loggedInCounselorEmail = getCurrentUserEmail();
+        logger.info("email {}", loggedInCounselorEmail);
         return counselorRepository.findByEmail(loggedInCounselorEmail)
                 .orElseThrow(() -> new RuntimeException("상담사 정보를 찾을 수 없습니다."));
     }
@@ -134,8 +139,12 @@ public class ClientService {
     private String getCurrentUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
+            logger.error("Authentication object is null or user is not authenticated");
             throw new RuntimeException("인증된 사용자가 아닙니다.");
         }
+
+        logger.info("Authenticated user's email: {}", authentication.getName());
         return authentication.getName();
     }
+
 }
