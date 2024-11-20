@@ -36,6 +36,12 @@ public class ClientController {
         return clientService.getClientsByLoggedInCounselor();
     }
 
+    // 로그인된 상담사에게 배정된 내담자 이름 목록 조회
+    @GetMapping("/assigned-client-names")
+    public ResponseDto<List<String>> getClientNamesByLoggedInCounselor() {
+        return clientService.getClientNamesByLoggedInCounselor();
+    }
+
 
     // 특정 내담자 조회
     @GetMapping("/{id}")

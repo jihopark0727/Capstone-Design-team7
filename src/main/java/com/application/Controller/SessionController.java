@@ -45,11 +45,12 @@ public class SessionController {
     }
 
     // 녹음 파일 업로드 및 AI 분석 요청
-    @PostMapping("/{clientId}/analyze-recording")
-    public ResponseDto<String> analyzeRecording(
+    @PostMapping("/{clientId}/{sessionNumber}/analyze-recording")
+    public ResponseDto<String> analyzeSessionRecording(
             @PathVariable Long clientId,
+            @PathVariable Integer sessionNumber,
             @RequestParam("file") MultipartFile file) {
-        return emotionAnalysisService.analyzeRecording(clientId, file);
+        return sessionService.analyzeSessionRecording(clientId, sessionNumber, file);
     }
 
     // 감정 분석 결과 저장 API

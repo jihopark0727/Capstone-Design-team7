@@ -24,7 +24,4 @@ public class CounselingTopic {
 
     @Column(name = "topic_name", nullable = false, length = 255,  unique = true)
     private String topicName;
-
-    @ManyToMany(mappedBy = "counselingTopics")
-    private Set<Client> clients = new HashSet<>();
 }

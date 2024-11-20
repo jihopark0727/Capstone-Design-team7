@@ -147,4 +147,23 @@ public class ClientService {
         return authentication.getName();
     }
 
+    public ResponseDto<List<String>> getClientNamesByLoggedInCounselor() {
+        Counselor counselor = getLoggedInCounselor();
+
+        logger.info("Logged-in counselor: {}", counselor);
+
+        // 상담사-내담자 관계 조회
+        List<CounselorClient> counselorClients = counselorClientRepository.findByCounselor(counselor);
+        logger.info("Counselor clients found: {}", counselorClients);
+        counselorClients.forEach(cc -> logger.info("Client: {}, Topic: {}", cc.getClient(), cc.getTopic()));
+
+        // 클라이언트 이름만 추출
+        List<String> result = counselorClients.stream()
+                .map(cc -> cc.getClient().getName()) // 클라이언트 이름만 추출
+                .collect(Collectors.toList());
+
+        return ResponseDto.setSuccessData("상담사의 내담자 이름 조회 성공", result, HttpStatus.OK);
+    }
+
+
 }

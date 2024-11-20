@@ -9,7 +9,6 @@ import com.application.Entity.Session;
 import com.application.Repository.EmotionAnalysisReportRepository;
 import com.application.Repository.EmotionMapRepository;
 import com.application.Repository.SessionRepository;
-import com.application.Repository.ClientRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,20 +17,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 public class EmotionAnalysisService {
+
     private final EmotionAnalysisReportRepository emotionAnalysisReportRepository;
     private final EmotionMapRepository emotionMapRepository;
     private final SessionRepository sessionRepository;
-    private final ClientRepository clientRepository;
     private final NaverCloudClient naverCloudClient;
     private final FlaskCommunicationService flaskCommunicationService;
 
@@ -40,64 +37,79 @@ public class EmotionAnalysisService {
             EmotionAnalysisReportRepository emotionAnalysisReportRepository,
             EmotionMapRepository emotionMapRepository,
             SessionRepository sessionRepository,
-            ClientRepository clientRepository,
             NaverCloudClient naverCloudClient,
             FlaskCommunicationService flaskCommunicationService
     ) {
         this.emotionAnalysisReportRepository = emotionAnalysisReportRepository;
         this.emotionMapRepository = emotionMapRepository;
         this.sessionRepository = sessionRepository;
-        this.clientRepository = clientRepository;
         this.naverCloudClient = naverCloudClient;
         this.flaskCommunicationService = flaskCommunicationService;
     }
 
-    public ResponseDto<String> analyzeRecording(Long clientId, MultipartFile file) {
+    /**
+     * 녹음 파일 분석
+     *
+     * @param clientId  클라이언트 ID
+     * @param sessionNumber 세션 number
+     * @param file      녹음 파일
+     * @return 분석 결과
+     */
+    public ResponseDto<String> analyzeRecording(Long clientId, Integer sessionNumber, MultipartFile file) {
         try {
-            File convFile = convertMultipartFileToFile(file);
-            List<Map<String, String>> speakerSegments = naverCloudClient.soundToText(convFile);
+            // 1. 세션 검증
+            Session session = sessionRepository.findByClientIdAndSessionNumber(clientId, sessionNumber)
+                    .orElseThrow(() -> new IllegalArgumentException("해당 세션 번호가 존재하지 않습니다."));
 
-            if (!convFile.delete()) {
-                System.out.println("Failed to delete the temporary file");
-            }
+            // 2. MultipartFile을 File로 변환
+            File convertedFile = convertMultipartFileToFile(file);
+
+            // 3. 녹음 파일 -> 텍스트 변환 (STT API 호출)
+            List<Map<String, String>> speakerSegments = naverCloudClient.soundToText(convertedFile);
 
             if (speakerSegments == null || speakerSegments.isEmpty()) {
-                return ResponseDto.setFailed("텍스트 변환에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+                return ResponseDto.setFailed("STT 변환에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
-            // 각 speaker segment의 텍스트를 하나의 문장으로 합침
+            // 4. 텍스트 데이터 생성
             String transcript = speakerSegments.stream()
                     .map(segment -> segment.get("text"))
                     .collect(Collectors.joining(" "));
 
+            // 5. 감정 분석 수행 (로컬 AI 모델 호출)
             String predictionResult = flaskCommunicationService.getPrediction(transcript);
 
-            // JSON 문자열을 List<AIAnalysisResult>로 변환
+            // 6. AI 분석 결과를 객체로 변환
             ObjectMapper objectMapper = new ObjectMapper();
             List<AIAnalysisResult> analysisResults = objectMapper.readValue(
                     predictionResult, new TypeReference<List<AIAnalysisResult>>() {});
 
-            saveAnalysisResults(clientId, analysisResults);
+            // 7. 분석 결과 저장
+            saveAnalysisResults(session.getId(), analysisResults);
 
             return ResponseDto.setSuccessData("AI 분석 완료", predictionResult, HttpStatus.OK);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseDto.setFailed("파일 처리 중 오류가 발생했습니다: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseDto.setFailed("녹음 분석 중 오류가 발생했습니다: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private File convertMultipartFileToFile(MultipartFile file) throws IOException {
-        File convFile = File.createTempFile("upload_", Objects.requireNonNull(file.getOriginalFilename()));
-        try (FileOutputStream fos = new FileOutputStream(convFile)) {
-            fos.write(file.getBytes());
-        }
-        return convFile;
+
+    // MultipartFile을 File로 변환하는 메서드
+    private File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
+        // 임시 파일로 저장
+        File file = new File(multipartFile.getOriginalFilename());
+        multipartFile.transferTo(file); // multipartFile의 내용을 file로 복사
+        return file;
     }
 
-    // 감정 분석 결과를 List<AIAnalysisResult>로 받아서 저장하는 메서드
+    /**
+     * 감정 분석 결과 저장
+     *
+     * @param sessionId      세션 ID
+     * @param analysisResults 분석 결과
+     */
     public void saveAnalysisResults(Long sessionId, List<AIAnalysisResult> analysisResults) {
         Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 세션 ID가 존재하지 않습니다."));
@@ -116,10 +128,22 @@ public class EmotionAnalysisService {
         emotionAnalysisReportRepository.saveAll(reports);
     }
 
+    /**
+     * 세션의 감정 분석 결과 조회
+     *
+     * @param sessionId 세션 ID
+     * @return 감정 분석 결과 목록
+     */
     public List<EmotionAnalysisReport> getEmotionReportsBySession(Long sessionId) {
         return emotionAnalysisReportRepository.findBySessionId(sessionId);
     }
 
+    /**
+     * 클라이언트의 감정 요약 데이터 조회
+     *
+     * @param clientId 클라이언트 ID
+     * @return 감정 요약 데이터 목록
+     */
     public List<EmotionMap> getEmotionSummaryByClient(Long clientId) {
         return emotionMapRepository.findByClient_Id(clientId);
     }
