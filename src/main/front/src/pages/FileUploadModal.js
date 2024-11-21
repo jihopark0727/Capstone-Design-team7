@@ -8,41 +8,34 @@ function FileUploadPage({ onClose }) {
     const [selectedFile, setSelectedFile] = useState(null);
     const [clients, setClients] = useState([]);
     const [sessions, setSessions] = useState([]);
-
     const [selectedClient, setSelectedClient] = useState('');
     const [isDirectClientInput, setIsDirectClientInput] = useState(false);
     const [directClientInput, setDirectClientInput] = useState('');
-
     const [selectedSession, setSelectedSession] = useState('');
     const [isDirectSessionInput, setIsDirectSessionInput] = useState(false);
     const [directSessionInput, setDirectSessionInput] = useState('');
+    const [isUploading, setIsUploading] = useState(false); // 업로드 진행 상태
 
     // 내담자 목록 불러오기
-    // 내담자 목록 불러오기
-        useEffect(() => {
-            const fetchClients = async () => {
-                try {
-                    const token = localStorage.getItem('token');
-                    const response = await axios.get('/api/clients/assigned-client-names', {
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
+    useEffect(() => {
+        const fetchClients = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await axios.get('/api/clients/assigned-client-names', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
 
-                    // 백엔드에서 "data"가 이름 목록임
-                    const clientNames = response.data.data;
-                    setClients(clientNames);
+                const clientNames = response.data.data;
+                setClients(clientNames);
+            } catch (error) {
+                console.error('내담자 목록 불러오기 실패:', error);
+                setClients([]);
+            }
+        };
 
-                    // 디버깅: 불러온 이름 리스트 출력
-                    console.log('Fetched client names:', clientNames);
-                } catch (error) {
-                    console.error('내담자 목록 불러오기 실패:', error);
-                    setClients([]); // 실패 시 빈 배열로 초기화
-                }
-            };
+        fetchClients();
+    }, []);
 
-            fetchClients();
-        }, []);
-
-    // 내담자 변경 시 세션 목록 업데이트
     const handleClientChange = async (e) => {
         const value = e.target.value;
         setSelectedClient(value);
@@ -62,14 +55,7 @@ function FileUploadPage({ onClose }) {
 
                 const sessionsData = response.data.data;
                 setSessions(sessionsData.map((session) => session.name));
-
-                // 다음 회차 자동 선택
-                if (sessionsData.length === 0) {
-                    setSelectedSession('1회차');
-                } else {
-                    const nextSessionNumber = sessionsData.length + 1;
-                    setSelectedSession(`${nextSessionNumber}회차`);
-                }
+                setSelectedSession(`${sessionsData.length + 1}회차`);
             } catch (error) {
                 console.error('세션 목록 불러오기 실패:', error);
                 setSessions([]);
@@ -102,27 +88,33 @@ function FileUploadPage({ onClose }) {
             return;
         }
 
+        const clientId = client; // 실제 clientId 값으로 변환 필요
+        const sessionNumber = session.replace('회차', ''); // "1회차"에서 숫자 추출
+
         const formData = new FormData();
-        formData.append('clientName', client);
-        formData.append('sessionNumber', session);
         formData.append('file', selectedFile);
 
         try {
+            setIsUploading(true); // 업로드 시작 상태 설정
+
             const token = localStorage.getItem('token');
-            const response = await axios.post('/api/sessions/upload-and-analyze', formData, {
+            const response = await axios.post(`/api/sessions/${clientId}/${sessionNumber}/analyze-recording`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data',
                 },
             });
 
-            // 분석 진행 페이지로 이동
+            // 업로드 성공 시 분석 진행 화면으로 이동
             if (response.status === 200) {
-                navigate('/file-analysis', { state: { reportId: response.data.reportId } });
+                alert('파일 업로드 및 분석이 완료되었습니다.');
+                navigate('/analysis-results', { state: { reportId: response.data.reportId } });
             }
         } catch (error) {
             console.error('파일 업로드 실패:', error);
             alert('파일 업로드 중 오류가 발생했습니다.');
+        } finally {
+            setIsUploading(false); // 업로드 상태 초기화
         }
     };
 
@@ -139,90 +131,93 @@ function FileUploadPage({ onClose }) {
 
     return (
         <div className="modal-overlay">
-            <div className="file-upload-page">
-                <button className="close-button" onClick={onClose}>
-                    ×
-                </button>
-                <div className="text--">파일 업로드</div>
-                <div className="container3">
-                    <input
-                        type="file"
-                        id="file-input"
-                        onChange={handleFileChange}
-                        className="file-input"
-                    />
-                    <label htmlFor="file-input" className="text------">
-                        파일을 업로드하려면 클릭하세요.
-                    </label>
-                </div>
-                <div className="file-info">
-                    <span className="text---mp3-wav">지원 확장자: MP3, WAV, m4a</span>
-                    <span className="text----20mb">파일 최대 사이즈: 20MB</span>
-                </div>
-                <div className="dropdowns-row">
-                    <div className="dropdown">
-                        <select
-                            className="dropdown-select"
-                            onChange={handleClientChange}
-                            value={isDirectClientInput ? 'direct' : selectedClient}
-                        >
-                            <option value="" disabled>
-                                내담자 선택
-                            </option>
-                            {/* clients 배열이 문자열 배열일 경우 수정 */}
-                            {clients.map((client, index) => (
-                                <option key={index} value={client}>
-                                    {client} {/* 문자열 자체를 렌더링 */}
+            {isUploading ? (
+                <div className="loading-page">파일을 분석 중입니다. 잠시만 기다려주세요...</div>
+            ) : (
+                <div className="file-upload-page">
+                    <button className="close-button" onClick={onClose}>
+                        ×
+                    </button>
+                    <div className="text--">파일 업로드</div>
+                    <div className="container3">
+                        <input
+                            type="file"
+                            id="file-input"
+                            onChange={handleFileChange}
+                            className="file-input"
+                        />
+                        <label htmlFor="file-input" className="text------">
+                            파일을 업로드하려면 클릭하세요.
+                        </label>
+                    </div>
+                    <div className="file-info">
+                        <span className="text---mp3-wav">지원 확장자: MP3, WAV, m4a</span>
+                        <span className="text----20mb">파일 최대 사이즈: 20MB</span>
+                    </div>
+                    <div className="dropdowns-row">
+                        <div className="dropdown">
+                            <select
+                                className="dropdown-select"
+                                onChange={handleClientChange}
+                                value={isDirectClientInput ? 'direct' : selectedClient}
+                            >
+                                <option value="" disabled>
+                                    내담자 선택
                                 </option>
-                            ))}
-                            <option value="direct">직접 입력</option>
-                        </select>
-                        {isDirectClientInput && (
-                            <input
-                                type="text"
-                                className="direct-input"
-                                placeholder="내담자 이름 입력"
-                                value={directClientInput}
-                                onChange={(e) => setDirectClientInput(e.target.value)}
-                            />
-                        )}
-                    </div>
-
-                    <div className="dropdown">
-                        <select
-                            className="dropdown-select"
-                            onChange={handleSessionChange}
-                            value={isDirectSessionInput ? 'direct' : selectedSession}
-                        >
-                            <option value="" disabled>
-                                회기 선택
-                            </option>
-                            {sessions.length === 0 ? (
-                                <option value="1회차">1회차</option>
-                            ) : (
-                                sessions.map((session, index) => (
-                                    <option key={index} value={session}>
-                                        {session}
+                                {clients.map((client, index) => (
+                                    <option key={index} value={client}>
+                                        {client}
                                     </option>
-                                ))
+                                ))}
+                                <option value="direct">직접 입력</option>
+                            </select>
+                            {isDirectClientInput && (
+                                <input
+                                    type="text"
+                                    className="direct-input"
+                                    placeholder="내담자 이름 입력"
+                                    value={directClientInput}
+                                    onChange={(e) => setDirectClientInput(e.target.value)}
+                                />
                             )}
-                            <option value="direct">직접 입력</option>
-                        </select>
-                        {isDirectSessionInput && (
-                            <input
-                                type="text"
-                                className="direct-input"
-                                placeholder="회기 정보 입력"
-                                value={directSessionInput}
-                                onChange={(e) => setDirectSessionInput(e.target.value)}
-                            />
-                        )}
+                        </div>
+
+                        <div className="dropdown">
+                            <select
+                                className="dropdown-select"
+                                onChange={handleSessionChange}
+                                value={isDirectSessionInput ? 'direct' : selectedSession}
+                            >
+                                <option value="" disabled>
+                                    회기 선택
+                                </option>
+                                {sessions.length === 0 ? (
+                                    <option value="1회차">1회차</option>
+                                ) : (
+                                    sessions.map((session, index) => (
+                                        <option key={index} value={session}>
+                                            {session}
+                                        </option>
+                                    ))
+                                )}
+                                <option value="direct">직접 입력</option>
+                            </select>
+                            {isDirectSessionInput && (
+                                <input
+                                    type="text"
+                                    className="direct-input"
+                                    placeholder="회기 정보 입력"
+                                    value={directSessionInput}
+                                    onChange={(e) => setDirectSessionInput(e.target.value)}
+                                />
+                            )}
+                        </div>
+                    </div>
+                    <div className="button" onClick={handleUpload}>
+                        <div className="text-">업로드</div>
                     </div>
                 </div>
-                <div className="button" onClick={handleUpload}>
-                    <div className="text-">업로드</div>
-                </div>
-            </div>
+            )}
         </div>
     );
 }

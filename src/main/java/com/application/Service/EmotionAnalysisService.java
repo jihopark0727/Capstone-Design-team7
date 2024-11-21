@@ -1,7 +1,6 @@
 package com.application.Service;
 
 import com.application.Client.NaverCloudClient;
-import com.application.Dto.AIAnalysisResult;
 import com.application.Dto.ResponseDto;
 import com.application.Entity.EmotionAnalysisReport;
 import com.application.Entity.EmotionMap;
@@ -9,12 +8,12 @@ import com.application.Entity.Session;
 import com.application.Repository.EmotionAnalysisReportRepository;
 import com.application.Repository.EmotionMapRepository;
 import com.application.Repository.SessionRepository;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.application.Service.FlaskCommunicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -38,13 +37,13 @@ public class EmotionAnalysisService {
             EmotionMapRepository emotionMapRepository,
             SessionRepository sessionRepository,
             NaverCloudClient naverCloudClient,
-            FlaskCommunicationService flaskCommunicationService
+            FlaskCommunicationService flaskCommunicationService // 소문자로 수정
     ) {
         this.emotionAnalysisReportRepository = emotionAnalysisReportRepository;
         this.emotionMapRepository = emotionMapRepository;
         this.sessionRepository = sessionRepository;
         this.naverCloudClient = naverCloudClient;
-        this.flaskCommunicationService = flaskCommunicationService;
+        this.flaskCommunicationService = flaskCommunicationService; // 주입 연결
     }
 
     /**
@@ -57,32 +56,26 @@ public class EmotionAnalysisService {
      */
     public ResponseDto<String> analyzeRecording(Long clientId, Integer sessionNumber, MultipartFile file) {
         try {
-            // 1. 세션 검증
+            // 1. 세션 확인
             Session session = sessionRepository.findByClientIdAndSessionNumber(clientId, sessionNumber)
-                    .orElseThrow(() -> new IllegalArgumentException("해당 세션 번호가 존재하지 않습니다."));
+                    .orElseThrow(() -> new IllegalArgumentException("해당 세션이 존재하지 않습니다."));
 
-            // 2. MultipartFile을 File로 변환
+            // 2. MultipartFile -> File 변환
             File convertedFile = convertMultipartFileToFile(file);
 
-            // 3. 로컬 AI 모델로 녹음 파일 전송 및 분석 수행
-            String predictionResult = flaskCommunicationService.analyzeRecording(convertedFile);
+            // 3. Flask 서버로 분석 요청
+            List<Map<String, Object>> analysisResults = flaskCommunicationService.analyzeRecording(convertedFile);
 
-            // 4. AI 분석 결과를 객체로 변환
-            ObjectMapper objectMapper = new ObjectMapper();
-            List<AIAnalysisResult> analysisResults = objectMapper.readValue(
-                    predictionResult, new TypeReference<List<AIAnalysisResult>>() {});
-
-            // 5. 분석 결과 저장
+            // 4. 분석 결과를 데이터베이스에 저장
             saveAnalysisResults(session.getId(), analysisResults);
 
-            return ResponseDto.setSuccessData("AI 분석 완료", predictionResult, HttpStatus.OK);
-
+            // 5. 성공 메시지 반환
+            return ResponseDto.setSuccessData("분석 완료", "분석 결과가 성공적으로 저장되었습니다.", HttpStatus.OK);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseDto.setFailed("녹음 분석 중 오류가 발생했습니다: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseDto.setFailed("분석 중 오류 발생: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
 
     // MultipartFile을 File로 변환하는 메서드
     private File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {
@@ -98,21 +91,37 @@ public class EmotionAnalysisService {
      * @param sessionId      세션 ID
      * @param analysisResults 분석 결과
      */
-    public void saveAnalysisResults(Long sessionId, List<AIAnalysisResult> analysisResults) {
+    public void saveAnalysisResults(Long sessionId, List<Map<String, Object>> analysisResults) {
+        // 1. 세션 정보 조회
         Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 세션 ID가 존재하지 않습니다."));
 
+        // 2. AI 분석 결과를 EmotionAnalysisReport 엔티티로 변환
         List<EmotionAnalysisReport> reports = analysisResults.stream().map(result -> {
             EmotionAnalysisReport report = new EmotionAnalysisReport();
+
+            // 문장 데이터 설정
+            String sentenceText = (String) result.get("text");
+            String emotion = (String) result.get("emotion"); // 감정 (null 가능)
+            String sentenceId = (String) result.get("id");   // sentence_0.0_5.0
+
+            // 문장 번호 설정 (id에서 번호를 추출하거나, 순번을 이용)
+            int sentenceNumber = Integer.parseInt(sentenceId.split("_")[1].split("\\.")[0]);
+
+            // 키워드 설정 (현재 AI 결과에는 없음 -> 빈 배열)
+            String keywords = "[]";
+
+            // 보고서 엔티티 생성
             report.setSession(session);
-            report.setSentenceNumber(result.getSentenceNumber());
-            report.setSentenceText(result.getSentenceText());
-            report.setDominantEmotion(result.getEmotion());
-            report.setKeywords(result.getKeywords());
+            report.setSentenceNumber(sentenceNumber);
+            report.setSentenceText(sentenceText);
+            report.setDominantEmotion(emotion); // 감정 값 (null 가능)
+            report.setKeywords(keywords);      // 키워드 데이터
             report.setAnalyzedAt(new Timestamp(System.currentTimeMillis()));
             return report;
         }).collect(Collectors.toList());
 
+        // 3. 데이터베이스에 저장
         emotionAnalysisReportRepository.saveAll(reports);
     }
 

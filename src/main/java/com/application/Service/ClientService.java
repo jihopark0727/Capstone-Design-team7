@@ -128,7 +128,7 @@ public class ClientService {
 
 
     // 현재 로그인된 상담사 정보 가져오기
-    private Counselor getLoggedInCounselor() {
+    public Counselor getLoggedInCounselor() {
         String loggedInCounselorEmail = getCurrentUserEmail();
         logger.info("email {}", loggedInCounselorEmail);
         return counselorRepository.findByEmail(loggedInCounselorEmail)

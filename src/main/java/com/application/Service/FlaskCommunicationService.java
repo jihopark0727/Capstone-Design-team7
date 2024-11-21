@@ -8,31 +8,34 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class FlaskCommunicationService {
 
-    private final String FLASK_SERVER_URL = "http://localhost:5000/analyze";
+    private final String FLASK_SERVER_URL = "http://localhost:5000/analyze"; // Python 서버 URL
 
-    public String analyzeRecording(File file) throws IOException {
-        // HTTP POST 요청 생성
+    // Flask 서버로 녹음 파일 전송 및 분석 결과 수신
+    public List<Map<String, Object>> analyzeRecording(File file) throws IOException {
         HttpPost post = new HttpPost(FLASK_SERVER_URL);
 
-        // Multipart 데이터 생성 (녹음 파일 첨부)
+        // Multipart 데이터 생성 (파일 업로드 방식)
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.addBinaryBody("file", file, ContentType.MULTIPART_FORM_DATA, file.getName());
-
         post.setEntity(builder.build());
 
-        // HTTP 클라이언트를 사용해 요청 전송
+        // 요청 실행 및 응답 수신
         try (CloseableHttpClient client = HttpClients.createDefault();
              CloseableHttpResponse response = client.execute(post)) {
 
-            // Flask 서버에서 받은 응답 반환
-            return EntityUtils.toString(response.getEntity());
+            String jsonResponse = EntityUtils.toString(response.getEntity()); // JSON 형태의 응답
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(jsonResponse, List.class); // 응답을 List<Map> 형식으로 변환
         }
     }
 }

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/sessions")
@@ -51,15 +52,6 @@ public class SessionController {
             @PathVariable Integer sessionNumber,
             @RequestParam("file") MultipartFile file) {
         return sessionService.analyzeSessionRecording(clientId, sessionNumber, file);
-    }
-
-    // 감정 분석 결과 저장 API
-    @PostMapping("/{sessionId}/analyze")
-    public ResponseDto<?> saveAnalysisResults(
-            @PathVariable Long sessionId,
-            @RequestBody List<AIAnalysisResult> analysisResults) {
-        emotionAnalysisService.saveAnalysisResults(sessionId, analysisResults);
-        return ResponseDto.setSuccess("감정 분석 결과가 성공적으로 저장되었습니다.", HttpStatus.CREATED);
     }
 
     // 특정 세션의 감정 분석 결과 조회
