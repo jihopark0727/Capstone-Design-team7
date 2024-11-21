@@ -64,8 +64,9 @@ function App() {
                                 </ProtectedRoute>
                             }
                         />
+                        {/* 내담자별 대시보드 라우팅 */}
                         <Route
-                            path="/dashboard"
+                            path="/dashboard/:clientId"
                             element={
                                 <ProtectedRoute isLoggedIn={isLoggedIn}>
                                     <EmotionDashboard />

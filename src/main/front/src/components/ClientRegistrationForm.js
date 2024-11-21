@@ -1,10 +1,27 @@
 import React, { useState } from 'react';
 
+// ENUM 값 정의
+const TOPIC_OPTIONS = [
+    '가족',
+    '친구',
+    '직장',
+    '학교',
+    '진로',
+    '연애',
+    '우울',
+    '불안',
+    '스트레스',
+    '재정 관리',
+    '부부 갈등',
+    '자기 계발',
+    '중독',
+];
+
 function ClientRegistrationForm({ onSubmit, onCancel }) {
     const [client, setClient] = useState({
         registrationStatus: '신규',
         name: '',
-        counselingTopics: '', // 상담 주제를 콤마로 입력받음
+        counselingTopic: '', // 상담 주제를 단일 값으로 저장
         contactNumber: '',
         gender: '',
         age: '',
@@ -22,26 +39,18 @@ function ClientRegistrationForm({ onSubmit, onCancel }) {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // 상담 주제를 문자열로 처리 (콤마로 구분된 문자열)
-        const topicsString = client.counselingTopics
-            .split(',')
-            .map((topic) => topic.trim())
-            .filter((topic) => topic.length > 0)
-            .join(',');
-
         const formattedClient = {
             ...client,
-            counselingTopics: topicsString, // 문자열로 변환하여 전달
         };
 
-        console.log("Formatted client data:", formattedClient); // 디버깅용
+        console.log('Formatted client data:', formattedClient); // 디버깅용
         onSubmit(formattedClient);
 
         // 폼 초기화
         setClient({
             registrationStatus: '신규',
             name: '',
-            counselingTopics: '',
+            counselingTopic: '',
             contactNumber: '',
             gender: '',
             age: '',
@@ -64,15 +73,20 @@ function ClientRegistrationForm({ onSubmit, onCancel }) {
                 <input type="text" name="name" value={client.name} onChange={handleChange} required />
             </div>
             <div>
-                <label>상담 주제 (콤마로 구분):</label>
-                <input
-                    type="text"
-                    name="counselingTopics"
-                    value={client.counselingTopics}
+                <label>상담 주제:</label>
+                <select
+                    name="counselingTopic"
+                    value={client.counselingTopic}
                     onChange={handleChange}
-                    placeholder="예: 진로 상담, 스트레스 관리"
                     required
-                />
+                >
+                    <option value="">주제를 선택하세요</option>
+                    {TOPIC_OPTIONS.map((topic) => (
+                        <option key={topic} value={topic}>
+                            {topic}
+                        </option>
+                    ))}
+                </select>
             </div>
             <div>
                 <label>연락처:</label>
@@ -121,8 +135,7 @@ function ClientRegistrationForm({ onSubmit, onCancel }) {
                         setClient({
                             registrationStatus: '신규',
                             name: '',
-                            counselingTopics: '',
-                            affiliation: '',
+                            counselingTopic: '',
                             contactNumber: '',
                             gender: '',
                             age: '',

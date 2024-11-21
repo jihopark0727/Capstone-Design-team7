@@ -1,6 +1,15 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';  // useHistory 대신 useNavigate 사용
 
 function ClientTable({ clients, onEdit }) {
+    const navigate = useNavigate();  // useNavigate 훅 초기화
+
+    // "상담기록보기" 버튼 클릭 시 호출되는 함수
+    const handleViewRecords = (clientId) => {
+        // 해당 내담자의 상담 기록 페이지로 이동
+        navigate(`/dashboard/${clientId}`);
+    };
+
     return (
         <div className="table-container">
             <table className="data-grid">
@@ -14,11 +23,12 @@ function ClientTable({ clients, onEdit }) {
                     <th>나이</th>
                     <th>등록일</th>
                     <th>편집</th>
+                    <th>상담기록보기</th> {/* 버튼을 위한 새로운 열 추가 */}
                 </tr>
                 </thead>
                 <tbody>
                 {clients.map((item, index) => {
-                    const client = item?.client; // client가 있는지 확인
+                    const client = item?.client;
                     const registrationStatus = client?.registrationStatus || "N/A"; // 기본값 설정
 
                     return (
@@ -35,10 +45,12 @@ function ClientTable({ clients, onEdit }) {
                             <td>
                                 <span className="edit-icon" onClick={() => onEdit(client)}>✏️</span>
                             </td>
+                            <td>
+                                <button onClick={() => handleViewRecords(client?.id)}>상담기록보기</button> {/* 상담기록보기 버튼 추가 */}
+                            </td>
                         </tr>
                     );
                 })}
-
                 </tbody>
             </table>
         </div>
