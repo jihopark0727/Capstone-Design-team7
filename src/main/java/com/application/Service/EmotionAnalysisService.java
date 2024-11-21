@@ -64,27 +64,15 @@ public class EmotionAnalysisService {
             // 2. MultipartFile을 File로 변환
             File convertedFile = convertMultipartFileToFile(file);
 
-            // 3. 녹음 파일 -> 텍스트 변환 (STT API 호출)
-            List<Map<String, String>> speakerSegments = naverCloudClient.soundToText(convertedFile);
+            // 3. 로컬 AI 모델로 녹음 파일 전송 및 분석 수행
+            String predictionResult = flaskCommunicationService.analyzeRecording(convertedFile);
 
-            if (speakerSegments == null || speakerSegments.isEmpty()) {
-                return ResponseDto.setFailed("STT 변환에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-
-            // 4. 텍스트 데이터 생성
-            String transcript = speakerSegments.stream()
-                    .map(segment -> segment.get("text"))
-                    .collect(Collectors.joining(" "));
-
-            // 5. 감정 분석 수행 (로컬 AI 모델 호출)
-            String predictionResult = flaskCommunicationService.getPrediction(transcript);
-
-            // 6. AI 분석 결과를 객체로 변환
+            // 4. AI 분석 결과를 객체로 변환
             ObjectMapper objectMapper = new ObjectMapper();
             List<AIAnalysisResult> analysisResults = objectMapper.readValue(
                     predictionResult, new TypeReference<List<AIAnalysisResult>>() {});
 
-            // 7. 분석 결과 저장
+            // 5. 분석 결과 저장
             saveAnalysisResults(session.getId(), analysisResults);
 
             return ResponseDto.setSuccessData("AI 분석 완료", predictionResult, HttpStatus.OK);

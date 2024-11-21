@@ -1,29 +1,38 @@
 package com.application.Service;
 
-// FlaskCommunicationService.java
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
+
+import java.io.File;
+import java.io.IOException;
 
 @Service
 public class FlaskCommunicationService {
 
-    private final String FLASK_SERVER_URL = "http://localhost:5000/predict";
+    private final String FLASK_SERVER_URL = "http://localhost:5000/analyze";
 
-    public String getPrediction(String transcribedText) {
-        RestTemplate restTemplate = new RestTemplate();
+    public String analyzeRecording(File file) throws IOException {
+        // HTTP POST 요청 생성
+        HttpPost post = new HttpPost(FLASK_SERVER_URL);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", "application/json");
+        // Multipart 데이터 생성 (녹음 파일 첨부)
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.addBinaryBody("file", file, ContentType.MULTIPART_FORM_DATA, file.getName());
 
-        // JSON 형태의 요청 본문 생성
-        String jsonBody = String.format("{\"text\": \"%s\"}", transcribedText);
-        HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
+        post.setEntity(builder.build());
 
-        // Flask 서버로 요청 전송
-        ResponseEntity<String> response = restTemplate.postForEntity(FLASK_SERVER_URL, request, String.class);
-        return response.getBody();
+        // HTTP 클라이언트를 사용해 요청 전송
+        try (CloseableHttpClient client = HttpClients.createDefault();
+             CloseableHttpResponse response = client.execute(post)) {
+
+            // Flask 서버에서 받은 응답 반환
+            return EntityUtils.toString(response.getEntity());
+        }
     }
 }
