@@ -39,5 +39,6 @@ out/
 ### VS Code ###
 .vscode/
 
-### AI Models ###
+# Exclude large files
+node_modules/
 ai_server/saved_model.pt
