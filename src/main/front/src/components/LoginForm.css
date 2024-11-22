@@ -14,11 +14,19 @@
 }
 
 .signup-1 {
-    width: 100%; /* 부모 요소에 맞춤 */
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    max-width: 400px;
+    width: 100%;
     display: flex;
     flex-direction: column;
+    background: #F7F7F8;
     gap: 24px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
 
 .inputs {
     display: flex;
@@ -38,17 +46,20 @@
     width: 100%; /* 부모 요소에 맞춤 */
     font-size: 14px;
     color: #333;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    height: 40px;
 }
 
 .button {
-    width: 100%; /* 부모 요소에 맞춤 */
-    height: 48px;
-    border-radius: 8px;
-    background: #3578FF;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
+    width: 100% !important; /* 부모 요소에 맞춤 */
+    height: 40px !important;
+    border-radius: 8px !important;
+    background: #3578FF !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    cursor: pointer !important;
 }
 
 .button:hover {
@@ -88,3 +99,15 @@
     font-size: 14px;
     font-weight: 600;
 }
+
+/* 회원가입 링크 스타일 */
+.signup-link {
+    font-size: 14px;
+    color: #3578FF; /* 링크 색상 */
+    cursor: pointer; /* 클릭 가능한 손 모양 */
+}
+
+.signup-link:hover {
+    color: #285bb5; /* 호버 시 색상 변경 */
+}
+

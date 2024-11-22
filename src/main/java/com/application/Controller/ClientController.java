@@ -1,5 +1,8 @@
 package com.application.Controller;
 
+import com.application.Dto.ClientResponseDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.application.Dto.ClientRequestDto;
 import com.application.Dto.ResponseDto;
 import com.application.Entity.Client;
@@ -32,22 +35,17 @@ public class ClientController {
 
     // 로그인된 상담사에게 배정된 내담자 목록 조회
     @GetMapping("/assigned-clients")
-    public ResponseDto<List<Map<String, Object>>> getClientsByLoggedInCounselor() {
+    public ResponseDto<List<Client>> getClientsByLoggedInCounselor() {
         return clientService.getClientsByLoggedInCounselor();
-    }
-
-    // 로그인된 상담사에게 배정된 내담자 이름 목록 조회
-    @GetMapping("/assigned-client-names")
-    public ResponseDto<List<String>> getClientNamesByLoggedInCounselor() {
-        return clientService.getClientNamesByLoggedInCounselor();
     }
 
 
     // 특정 내담자 조회
-    @GetMapping("/{id}")
-    public ResponseDto<Client> getClientById(@PathVariable Long id) {
-        return clientService.getClientById(id);
+    @GetMapping("/{clientId}")
+    public ResponseDto<ClientResponseDto> getClientById(@PathVariable Long clientId) {
+        return clientService.getClientById(clientId);
     }
+
 
     // 특정 내담자의 감정 요약 조회
     @GetMapping("/{clientId}/summary")
@@ -62,10 +60,12 @@ public class ClientController {
         return sessionService.getSessionsByClient(clientId);
     }
 
+    private static final Logger logger = LoggerFactory.getLogger(ClientController.class);
+
     // 내담자 추가
     @PostMapping
     public ResponseDto<Client> addClient(@RequestBody ClientRequestDto clientRequestDto) {
-        List<String> topicNames = clientRequestDto.getTopicList();
+        System.out.println("\n\nReceived topic: " + clientRequestDto.getTopic()+"\n\n"); // 디버깅용
 
         Client client = new Client();
         client.setRegistrationStatus(clientRequestDto.getRegistrationStatus());
@@ -74,8 +74,9 @@ public class ClientController {
         client.setGender(clientRequestDto.getGender());
         client.setAge(clientRequestDto.getAge());
         client.setRegistrationDate(LocalDate.parse(clientRequestDto.getRegistrationDate()));
+        client.setTopic(clientRequestDto.getTopic()); // topic 설정
 
-        return clientService.addClient(client, topicNames.toString());
+        return clientService.addClient(client);
     }
 
 
@@ -84,11 +85,8 @@ public class ClientController {
     @PutMapping("/{id}")
     public ResponseDto<Client> updateClient(
             @PathVariable Long id,
-            @RequestBody Client client,
-            @RequestParam(required = false) String counselingTopics) {
-        // 상담 주제를 콤마로 구분된 문자열에서 배열로 변환
-        List<String> topics = List.of(counselingTopics.split(","));
-        return clientService.updateClient(id, client, topics.toString());
+            @RequestBody Client client) {
+        return clientService.updateClient(id, client);
     }
 
     // 내담자 삭제

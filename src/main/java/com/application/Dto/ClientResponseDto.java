@@ -7,12 +7,13 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor // 모든 필드를 포함하는 생성자 자동 생성
 @NoArgsConstructor  // 기본 생성자 자동 생성
-public class ClientRequestDto {
-    private String registrationStatus;
+public class ClientResponseDto {
+    private Long id;
     private String name;
-    private String contactNumber;
+    private Integer age;
     private String gender;
-    private int age;
+    private String contactNumber;
+    private String topic;
     private String registrationDate;
-    private String topic; // topic 필드 추가
+    private String registrationStatus;
 }

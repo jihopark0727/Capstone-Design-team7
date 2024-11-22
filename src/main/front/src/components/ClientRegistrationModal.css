@@ -1,0 +1,99 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* 반투명 배경 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: 10px;
+    padding: 30px;
+    width: 600px; /* 모달 너비 */
+    max-width: 90%; /* 작은 화면에서 반응형 */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.client-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* 각 행 간 간격 */
+}
+
+.client-form h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    text-align: center;
+    color: #0064FF;
+}
+
+.client-form div {
+    display: flex; /* 레이블과 입력폼을 나란히 배치 */
+    align-items: center; /* 수직 중앙 정렬 */
+    gap: 10px; /* 레이블과 입력폼 사이 간격 */
+}
+
+.client-form label {
+    flex: 1; /* 레이블이 입력창보다 작게 배치됨 */
+    font-weight: bold;
+    color: #333;
+    text-align: right; /* 레이블 오른쪽 정렬 */
+    margin-right: 10px; /* 입력폼과 간격 추가 */
+}
+
+.client-form input,
+.client-form select {
+    flex: 2; /* 입력폼의 크기를 레이블보다 크게 설정 */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: center; /* 버튼을 가로로 중앙 정렬 */
+    gap: 10px; /* 버튼 사이 간격 */
+    margin-top: 30px; /* 버튼과 입력 필드 사이 간격 */
+}
+
+.client-form button {
+    background-color: #0064FF;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.client-form button:hover {
+    background-color: #0056D6;
+}
+
+.cancel-button {
+    background-color: #f44336; /* 취소 버튼의 배경색 (빨간색) */
+    color: white;
+}
+
+.cancel-button:hover {
+    background-color: #d32f2f;
+}

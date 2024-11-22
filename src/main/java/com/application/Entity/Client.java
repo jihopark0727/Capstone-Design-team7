@@ -1,5 +1,6 @@
 package com.application.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "clients")
 @Data
@@ -34,6 +36,9 @@ public class Client {
 
     @Column(name = "contact_number", length = 20)
     private String contactNumber; // 연락처 추가
+
+    @Column
+    private String topic;
 
     @Column(name = "birth_date")
     private LocalDate birthDate; // 생년월일 추가

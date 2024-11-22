@@ -51,15 +51,25 @@ public class SessionController {
             @PathVariable Long clientId,
             @PathVariable Integer sessionNumber,
             @RequestParam("file") MultipartFile file) {
+
+        // 디버깅 정보 로그 출력
+        System.out.println("\n\nReceived file: " + file.getOriginalFilename());
+        System.out.println("File size: " + file.getSize());
+        System.out.println("File content type: " + file.getContentType()+"\n\n");
+
         return sessionService.analyzeSessionRecording(clientId, sessionNumber, file);
     }
 
-    // 특정 세션의 감정 분석 결과 조회
-    @GetMapping("/{sessionId}/analysis")
-    public ResponseDto<List<EmotionAnalysisReport>> getEmotionReportsBySession(@PathVariable Long sessionId) {
-        List<EmotionAnalysisReport> emotionReports = emotionAnalysisService.getEmotionReportsBySession(sessionId);
-        return ResponseDto.setSuccessData("세션의 감정 분석 결과 조회 성공", emotionReports, HttpStatus.OK);
+
+    // 특정 클라이언트의 세션별 감정 분석 결과 조회
+    @GetMapping("/clients/{clientId}/sessions/{sessionId}/analysis")
+    public ResponseDto<List<EmotionAnalysisReport>> getEmotionReportsByClientAndSession(
+            @PathVariable Long clientId,
+            @PathVariable Long sessionId) {
+        List<EmotionAnalysisReport> emotionReports = emotionAnalysisService.getEmotionReportsBySessionAndClient(sessionId, clientId);
+        return ResponseDto.setSuccessData("클라이언트 및 세션별 감정 분석 결과 조회 성공", emotionReports, HttpStatus.OK);
     }
+
 
     // 세션 삭제
     @DeleteMapping("/{id}")

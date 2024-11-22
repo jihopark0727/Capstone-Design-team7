@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface EmotionAnalysisReportRepository extends JpaRepository<EmotionAnalysisReport, Long> {
-    List<EmotionAnalysisReport> findBySessionId(Long sessionId);
+    List<EmotionAnalysisReport> findBySessionIdAndClientId(Long sessionId, Long clientId);
 }

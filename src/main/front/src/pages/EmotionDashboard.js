@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom'; // useParams 추가
+import { useParams } from 'react-router-dom';
 import ClientInfo from '../components/ClientInfo';
 import GptSummary from '../components/GptSummary';
 import EmotionGraph from '../components/EmotionGraph';
@@ -10,13 +10,28 @@ const EmotionDashboard = () => {
   const { clientId } = useParams(); // URL에서 clientId를 받아옴
   const [activeMenu, setActiveMenu] = useState('상담 정보');
   const [isFirstVisit, setIsFirstVisit] = useState(true);
-  const [sessions, setSessions] = useState([]); // 회기 데이터 상태
   const [clientInfo, setClientInfo] = useState(null); // 내담자 정보 상태
+  const [sessions, setSessions] = useState([]); // 초기값을 빈 배열로 설정
   const [selectedTranscript, setSelectedTranscript] = useState(null); // 선택된 축어록 데이터
   const [showTranscriptModal, setShowTranscriptModal] = useState(false); // 축어록 모달 상태
   const [showEmotionGraphModal, setShowEmotionGraphModal] = useState(false); // 감정 그래프 모달 상태
 
-  // Mock 데이터 (임시 데이터)
+  // Mock Data (백엔드가 없을 때 사용하는 임시 데이터)
+  const mockSessions = [
+    {
+      id: 1,
+      date: '2024-11-13 14:00',
+      transcript: '축어록 1',
+      emotionWave: '감정 파도 1',
+    },
+    {
+      id: 2,
+      date: '2024-11-14 15:30',
+      transcript: '축어록 2',
+      emotionWave: '감정 파도 2',
+    },
+  ];
+
   const mockTranscriptData = [
     { speaker: '내담자', text: '안녕하세요. 요즘 스트레스를 많이 받고 있어요.' },
     { speaker: '상담사', text: '안녕하세요. 스트레스의 원인이 무엇인지 이야기해볼까요?' },
@@ -24,6 +39,7 @@ const EmotionDashboard = () => {
   ];
 
   const mockEmotionGraphData = {
+    // 임시 감정 그래프 데이터
     happiness: 30,
     sadness: 20,
     anger: 10,
@@ -38,31 +54,44 @@ const EmotionDashboard = () => {
     }
   }, []);
 
+
+  // 내담자 정보 및 회기 데이터 가져오기
   useEffect(() => {
-    const fetchClientInfo = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(`/api/clients/${clientId}`);
-        console.log('Client Info Response:', response); // 응답 데이터 확인
-        // 데이터 구조에 맞게 수정
-        setClientInfo(response.data.data); // 내담자 정보 저장
+        // 내담자 정보 가져오기
+        const clientResponse = await axios.get(`/api/clients/${clientId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        console.log("Fetched Client Info:", clientResponse.data.data);
+        setClientInfo(clientResponse.data.data);
+
+        // 회기 데이터 가져오기
+        const sessionsResponse = await axios.get(`/api/clients/${clientId}/sessions`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+
+        const formattedSessions = sessionsResponse.data.data.map((session) => ({
+          id: session.id,
+          sessionDate: new Date(session.sessionDate).toLocaleString("ko-KR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          sessionNumber: session.sessionNumber,
+        }));
+
+        setSessions(formattedSessions);
       } catch (error) {
-        console.error('내담자 정보를 가져오는 중 오류 발생:', error);
-        setClientInfo(null); // 오류 발생 시 null로 설정
+        console.error("Error fetching sessions:", error.message);
       }
     };
 
-    const fetchSessions = async () => {
-      try {
-        const response = await axios.get(`/api/sessions/${clientId}`);
-        setSessions(response.data); // 회기 데이터 설정
-      } catch (error) {
-        console.error('회기별 데이터를 가져오는 중 오류 발생:', error);
-      }
-    };
-
-    fetchClientInfo(); // 내담자 정보 가져오기
-    fetchSessions();   // 회기 데이터 가져오기
+    fetchData(); // 비동기 함수 호출
   }, [clientId]);
+
 
   const handleMenuClick = (menu) => {
     setActiveMenu(menu);
@@ -74,7 +103,7 @@ const EmotionDashboard = () => {
   };
 
   const openTranscriptModal = (sessionId) => {
-    setSelectedTranscript(mockTranscriptData); // mock 데이터 설정
+    setSelectedTranscript(mockTranscriptData);
     setShowTranscriptModal(true);
   };
 
@@ -114,7 +143,6 @@ const EmotionDashboard = () => {
       <div className="container">
         <div className="dashboard-content">
           <div className="left-sidebar">
-            <ClientInfo />
             <div className="menu-container">
               {['상담 정보', '회기별 정보'].map((menu) => (
                   <button
@@ -130,62 +158,79 @@ const EmotionDashboard = () => {
           <div className="main-content">
             {activeMenu === '상담 정보' && (
                 <>
-                  <div className="data-grid">
-                    <div className="grid-row">
-                      <p>인적사항</p>
-                    </div>
-                    <div className="client-info">
-                      {/* 내담자 정보 표시 */}
-                      {clientInfo ? (
-                          <>
-                            <p><strong>이름:</strong> {clientInfo.name}</p>
-                            <p><strong>나이:</strong> {clientInfo.age}</p>
-                            <p><strong>성별:</strong> {clientInfo.gender}</p>
-                            <p><strong>연락처:</strong> {clientInfo.contactNumber}</p>
-                            <p><strong>상담 주제:</strong> {clientInfo.topic}</p>
-                          </>
-                      ) : (
-                          <p>내담자 정보가 없습니다.</p>
-                      )}
-                    </div>
-                  </div>
+                  {clientInfo ? (
+                      <div className="client-info-card">
+                        <div className="client-info-row single">
+                          <h3>{clientInfo.name}</h3>
+                        </div>
+                        <div className="client-info-row">
+                          <span>상담 주제:</span>
+                          <span>{clientInfo.topic || 'N/A'}</span>
+                        </div>
+                        <div className="client-info-row">
+                          <span>연락처:</span>
+                          <span>{clientInfo.contactNumber || 'N/A'}</span>
+                        </div>
+                        <div className="client-info-row">
+                          <span>성별:</span>
+                          <span>{clientInfo.gender || 'N/A'}</span>
+                        </div>
+                        <div className="client-info-row">
+                          <span>나이:</span>
+                          <span>{clientInfo.age || 'N/A'}</span>
+                        </div>
+                        <div className="client-info-row">
+                          <span>등록일:</span>
+                          <span>{clientInfo.registrationDate || 'N/A'}</span>
+                        </div>
+                      </div>
+                  ) : (
+                      <p>내담자 정보를 가져오는 중...</p>
+                  )}
+
                   <div className="summary-and-graph">
                     <GptSummary />
-                    <EmotionGraph data={mockEmotionGraphData} /> {/* mock 데이터 전달 */}
+                    <EmotionGraph data={mockEmotionGraphData} /> {/* 임시 데이터 전달 */}
                   </div>
                 </>
             )}
             {activeMenu === '회기별 정보' && (
                 <div className="list">
-                  {sessions.length === 0 ? (
-                      <p>등록된 회기 데이터가 없습니다.</p>
-                  ) : (
+                  {sessions && sessions.length > 0 ? (
                       sessions.map((session, index) => (
                           <div className="formitem" key={index}>
-                            <div className="time">
-                              <div className="time-1">
-                                <div className="text-2024-11-13-oooo">{session.date}</div>
+                            <div className="list-header">
+                              <div className="number">
+                                <div className="text-2024-11-13-oooo">{session.id}</div>
+                              </div>
+                              <div className="time">
+                                <div className="text-2024-11-13-oooo">{session.sessionDate}</div>
                               </div>
                               <div className="divider"></div>
                             </div>
                             <div className="task">
                               <div className="task-1">
+                                <div className="sessionTopic">
+                                  상담 주제가 추가될 공간입니다.
+                                </div>
                                 <div
                                     className="verbatim-button"
                                     onClick={() => openTranscriptModal(session.id)}
                                 >
-                                  {session.transcript}
+                                  축어록 {session.id}
                                 </div>
                                 <div
                                     className="emotiongraph-button-1"
                                     onClick={openEmotionGraphModal}
                                 >
-                                  {session.emotionWave}
+                                  감정파도
                                 </div>
                               </div>
                             </div>
                           </div>
                       ))
+                  ) : (
+                      <p>등록된 회기 데이터가 없습니다.</p>
                   )}
                 </div>
             )}
@@ -218,7 +263,7 @@ const EmotionDashboard = () => {
                 <button className="close-modal" onClick={closeEmotionGraphModal}>
                   ✖
                 </button>
-                <EmotionGraph data={mockEmotionGraphData} /> {/* mock 데이터 전달 */}
+                <EmotionGraph data={mockEmotionGraphData} /> {/* 임시 데이터 전달 */}
               </div>
             </div>
         )}

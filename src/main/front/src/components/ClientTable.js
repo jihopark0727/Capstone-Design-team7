@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';  // useHistory 대신 useNavigate 사용
+import './ClientTable.css';
 
 function ClientTable({ clients, onEdit }) {
     const navigate = useNavigate();  // useNavigate 훅 초기화
@@ -23,12 +24,11 @@ function ClientTable({ clients, onEdit }) {
                     <th>나이</th>
                     <th>등록일</th>
                     <th>편집</th>
-                    <th>상담기록보기</th> {/* 버튼을 위한 새로운 열 추가 */}
+                    <th>상담기록</th> {/* 버튼을 위한 새로운 열 추가 */}
                 </tr>
                 </thead>
                 <tbody>
-                {clients.map((item, index) => {
-                    const client = item?.client;
+                {clients.map((client, index) => {
                     const registrationStatus = client?.registrationStatus || "N/A"; // 기본값 설정
 
                     return (
@@ -37,7 +37,7 @@ function ClientTable({ clients, onEdit }) {
                                 {registrationStatus}
                             </td>
                             <td>{client?.name || "N/A"}</td>
-                            <td>{item?.topic || "N/A"}</td>
+                            <td>{client?.topic || "N/A"}</td> {/* topic 필드 바로 사용 */}
                             <td>{client?.contactNumber || "N/A"}</td>
                             <td>{client?.gender || "N/A"}</td>
                             <td>{client?.age || "N/A"}</td>
@@ -46,7 +46,9 @@ function ClientTable({ clients, onEdit }) {
                                 <span className="edit-icon" onClick={() => onEdit(client)}>✏️</span>
                             </td>
                             <td>
-                                <button onClick={() => handleViewRecords(client?.id)}>상담기록보기</button> {/* 상담기록보기 버튼 추가 */}
+                                <button className="view-records-button" onClick={() => handleViewRecords(client?.id)}>
+                                    상담기록보기
+                                </button>
                             </td>
                         </tr>
                     );

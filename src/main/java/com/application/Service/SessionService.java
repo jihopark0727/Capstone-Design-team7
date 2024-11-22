@@ -84,43 +84,43 @@ public class SessionService {
 
 
 
-/**
- * 모든 세션 조회
- */
-public ResponseDto<List<Session>> getAllSessions() {
-    List<Session> sessions = sessionRepository.findAll();
-    return ResponseDto.setSuccessData("모든 세션 조회 성공", sessions, HttpStatus.OK);
-}
-
-/**
- * 특정 세션 조회
- */
-public ResponseDto<Session> getSessionById(Long id) {
-    return sessionRepository.findById(id)
-            .map(session -> ResponseDto.setSuccessData("세션 조회 성공", session, HttpStatus.OK))
-            .orElse(ResponseDto.setFailed("세션 ID가 존재하지 않습니다.", HttpStatus.NOT_FOUND));
-}
-
-/**
- * 특정 클라이언트의 모든 세션 조회
- */
-public ResponseDto<List<Session>> getSessionsByClient(Long clientId) {
-    List<Session> sessions = sessionRepository.findByClientId(clientId);
-    if (sessions.isEmpty()) {
-        return ResponseDto.setFailed("해당 내담자에 대한 세션이 존재하지 않습니다.", HttpStatus.NOT_FOUND);
+    /**
+     * 모든 세션 조회
+     */
+    public ResponseDto<List<Session>> getAllSessions() {
+        List<Session> sessions = sessionRepository.findAll();
+        return ResponseDto.setSuccessData("모든 세션 조회 성공", sessions, HttpStatus.OK);
     }
-    return ResponseDto.setSuccessData("해당 내담자의 모든 세션 조회 성공", sessions, HttpStatus.OK);
-}
 
-/**
- * 세션 삭제
- */
-public ResponseDto<?> deleteSession(Long id) {
-    if (sessionRepository.existsById(id)) {
-        sessionRepository.deleteById(id);
-        return ResponseDto.setSuccess("세션 삭제 성공", HttpStatus.OK);
-    } else {
-        return ResponseDto.setFailed("세션 ID가 존재하지 않습니다.", HttpStatus.NOT_FOUND);
+    /**
+     * 특정 세션 조회
+     */
+    public ResponseDto<Session> getSessionById(Long id) {
+        return sessionRepository.findById(id)
+                .map(session -> ResponseDto.setSuccessData("세션 조회 성공", session, HttpStatus.OK))
+                .orElse(ResponseDto.setFailed("세션 ID가 존재하지 않습니다.", HttpStatus.NOT_FOUND));
     }
-}
+
+    /**
+     * 특정 클라이언트의 모든 세션 조회
+     */
+    public ResponseDto<List<Session>> getSessionsByClient(Long clientId) {
+        List<Session> sessions = sessionRepository.findByClientId(clientId);
+        if (sessions.isEmpty()) {
+            return ResponseDto.setFailed("해당 내담자에 대한 세션이 존재하지 않습니다.", HttpStatus.NOT_FOUND);
+        }
+        return ResponseDto.setSuccessData("해당 내담자의 모든 세션 조회 성공", sessions, HttpStatus.OK);
+    }
+
+    /**
+     * 세션 삭제
+     */
+    public ResponseDto<?> deleteSession(Long id) {
+        if (sessionRepository.existsById(id)) {
+            sessionRepository.deleteById(id);
+            return ResponseDto.setSuccess("세션 삭제 성공", HttpStatus.OK);
+        } else {
+            return ResponseDto.setFailed("세션 ID가 존재하지 않습니다.", HttpStatus.NOT_FOUND);
+        }
+    }
 }

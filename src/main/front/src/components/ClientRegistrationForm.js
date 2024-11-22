@@ -21,7 +21,7 @@ function ClientRegistrationForm({ onSubmit, onCancel }) {
     const [client, setClient] = useState({
         registrationStatus: '신규',
         name: '',
-        counselingTopic: '', // 상담 주제를 단일 값으로 저장
+        topic: '',
         contactNumber: '',
         gender: '',
         age: '',
@@ -50,7 +50,7 @@ function ClientRegistrationForm({ onSubmit, onCancel }) {
         setClient({
             registrationStatus: '신규',
             name: '',
-            counselingTopic: '',
+            topic: '',
             contactNumber: '',
             gender: '',
             age: '',
@@ -75,8 +75,8 @@ function ClientRegistrationForm({ onSubmit, onCancel }) {
             <div>
                 <label>상담 주제:</label>
                 <select
-                    name="counselingTopic"
-                    value={client.counselingTopic}
+                    name="topic"
+                    value={client.topic}
                     onChange={handleChange}
                     required
                 >
@@ -126,26 +126,7 @@ function ClientRegistrationForm({ onSubmit, onCancel }) {
                     required
                 />
             </div>
-            <div className="form-buttons">
-                <button type="submit">등록</button>
-                <button
-                    type="button"
-                    onClick={() => {
-                        onCancel();
-                        setClient({
-                            registrationStatus: '신규',
-                            name: '',
-                            counselingTopic: '',
-                            contactNumber: '',
-                            gender: '',
-                            age: '',
-                            registrationDate: new Date().toISOString().split('T')[0],
-                        });
-                    }}
-                >
-                    취소
-                </button>
-            </div>
+            <button className="view-records-button" type="submit">등록</button>
         </form>
     );
 }

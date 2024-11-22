@@ -21,12 +21,17 @@ function FileUploadPage({ onClose }) {
         const fetchClients = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await axios.get('/api/clients/assigned-client-names', {
+                const response = await axios.get('/api/clients/assigned-clients', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                const clientNames = response.data.data;
-                setClients(clientNames);
+                // 전체 Client 객체에서 id와 name만 추출하여 저장
+                const clientData = response.data.data.map((client) => ({
+                    id: client.id,
+                    name: client.name,
+                }));
+
+                setClients(clientData); // [{ id, name }] 형식으로 저장
             } catch (error) {
                 console.error('내담자 목록 불러오기 실패:', error);
                 setClients([]);
@@ -43,7 +48,7 @@ function FileUploadPage({ onClose }) {
         if (value === 'direct') {
             setIsDirectClientInput(true);
             setSessions([]);
-            setSelectedSession('');
+            setSelectedSession('1회차');
         } else {
             setIsDirectClientInput(false);
 
@@ -53,16 +58,21 @@ function FileUploadPage({ onClose }) {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                const sessionsData = response.data.data;
-                setSessions(sessionsData.map((session) => session.name));
-                setSelectedSession(`${sessionsData.length + 1}회차`);
+                // 세션 번호 추출 및 다음 회차 계산
+                const sessionsData = response.data.data; // 세션 목록
+                const sessionNumbers = sessionsData.map((session) => Number(session.sessionNumber));
+                const nextSessionNumber = sessionNumbers.length > 0 ? Math.max(...sessionNumbers) + 1 : 1;
+
+                setSessions(sessionNumbers); // 세션 번호 저장
+                setSelectedSession(`${nextSessionNumber}회차`); // 다음 회차를 기본값으로 설정
             } catch (error) {
                 console.error('세션 목록 불러오기 실패:', error);
                 setSessions([]);
-                setSelectedSession('1회차');
+                setSelectedSession('1회차'); // 기본값 설정
             }
         }
     };
+
 
     const handleFileChange = (e) => {
         setSelectedFile(e.target.files[0]);
@@ -75,48 +85,57 @@ function FileUploadPage({ onClose }) {
             return;
         }
 
-        const client = isDirectClientInput ? directClientInput : selectedClient;
-        const session = isDirectSessionInput ? directSessionInput : selectedSession;
+        const clientId = isDirectClientInput ? directClientInput : selectedClient;
+        const sessionNumber = isDirectSessionInput
+            ? directSessionInput
+            : selectedSession.replace(/[^0-9]/g, '');
 
-        if (!client) {
-            alert('내담자를 선택하거나 입력해주세요.');
+        if (!clientId) {
+            alert('내담자를 선택해주세요.');
             return;
         }
-
-        if (!session) {
-            alert('회기를 선택하거나 입력해주세요.');
-            return;
-        }
-
-        const clientId = client; // 실제 clientId 값으로 변환 필요
-        const sessionNumber = session.replace('회차', ''); // "1회차"에서 숫자 추출
 
         const formData = new FormData();
         formData.append('file', selectedFile);
+        formData.append('clientId', clientId);
+        formData.append('sessionNumber', sessionNumber);
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('로그인이 필요합니다.');
+            navigate('/login');
+            return;
+        }
+
+        // 페이지 이동 먼저 처리
+        navigate('/analysis', { state: { uploadStatus: 'uploading' } });
 
         try {
-            setIsUploading(true); // 업로드 시작 상태 설정
+            setIsUploading(true);
 
-            const token = localStorage.getItem('token');
-            const response = await axios.post(`/api/sessions/${clientId}/${sessionNumber}/analyze-recording`, formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+            const response = await axios.post(
+                `/api/sessions/${clientId}/${sessionNumber}/analyze-recording`,
+                formData,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
 
-            // 업로드 성공 시 분석 진행 화면으로 이동
             if (response.status === 200) {
-                alert('파일 업로드 및 분석이 완료되었습니다.');
-                navigate('/analysis-results', { state: { reportId: response.data.reportId } });
+                // 업로드 성공 상태 전달
+                navigate('/analysis', { state: { uploadStatus: 'success' } });
             }
         } catch (error) {
             console.error('파일 업로드 실패:', error);
-            alert('파일 업로드 중 오류가 발생했습니다.');
+            // 업로드 실패 상태 전달
+            navigate('/analysis', { state: { uploadStatus: 'failure' } });
         } finally {
-            setIsUploading(false); // 업로드 상태 초기화
+            setIsUploading(false);
         }
     };
+
+
+
 
     const handleSessionChange = (e) => {
         const value = e.target.value;
@@ -147,9 +166,17 @@ function FileUploadPage({ onClose }) {
                             className="file-input"
                         />
                         <label htmlFor="file-input" className="text------">
-                            파일을 업로드하려면 클릭하세요.
+                            {selectedFile ? (
+                                <div className="file-preview">
+                                    <span className="file-icon">📄</span> {/* 파일 아이콘 */}
+                                    <span className="file-name">{selectedFile.name}</span> {/* 파일 이름 */}
+                                </div>
+                            ) : (
+                                "파일을 업로드하려면 클릭하세요."
+                            )}
                         </label>
                     </div>
+
                     <div className="file-info">
                         <span className="text---mp3-wav">지원 확장자: MP3, WAV, m4a</span>
                         <span className="text----20mb">파일 최대 사이즈: 20MB</span>
@@ -164,9 +191,9 @@ function FileUploadPage({ onClose }) {
                                 <option value="" disabled>
                                     내담자 선택
                                 </option>
-                                {clients.map((client, index) => (
-                                    <option key={index} value={client}>
-                                        {client}
+                                {clients.map((client) => (
+                                    <option key={client.id} value={client.id}>
+                                        {client.name} {/* 화면에는 이름 표시 */}
                                     </option>
                                 ))}
                                 <option value="direct">직접 입력</option>
@@ -182,6 +209,7 @@ function FileUploadPage({ onClose }) {
                             )}
                         </div>
 
+
                         <div className="dropdown">
                             <select
                                 className="dropdown-select"
@@ -195,13 +223,18 @@ function FileUploadPage({ onClose }) {
                                     <option value="1회차">1회차</option>
                                 ) : (
                                     sessions.map((session, index) => (
-                                        <option key={index} value={session}>
-                                            {session}
+                                        <option key={index} value={`${session}회차`}>
+                                            {`${session}회차`}
                                         </option>
                                     ))
                                 )}
+                                <option value={`${sessions.length + 1}회차`} selected>
+                                    {`${sessions.length + 1}회차`} {/* 다음 회차 자동 설정 */}
+                                </option>
                                 <option value="direct">직접 입력</option>
                             </select>
+
+
                             {isDirectSessionInput && (
                                 <input
                                     type="text"

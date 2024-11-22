@@ -16,8 +16,11 @@ public class EmotionAnalysisReport {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "session_id")
+    @JoinColumn(name = "session_id", nullable = false)
     private Session session;
+
+    @Column(name = "client_id", nullable = false)
+    private Long clientId;  // 새로 추가된 필드
 
     @Column(name = "sentence_number")
     private Integer sentenceNumber;

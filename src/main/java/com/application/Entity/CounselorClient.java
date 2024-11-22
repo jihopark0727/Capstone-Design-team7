@@ -28,6 +28,4 @@ public class CounselorClient {
     @JsonBackReference // 순환 참조 방지
     private Client client;
 
-    @Column(name = "topic", nullable = false)
-    private String topic; // 상담 주제
 }

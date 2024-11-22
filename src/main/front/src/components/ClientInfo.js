@@ -7,14 +7,22 @@ const ClientInfo = ({ client }) => {
     }
 
     return (
-        <div className="client-info">
-            <h2>{client.name}</h2>
-            <p>상태: {client.registrationStatus}</p>
-            <p>상담 주제: {client.topic || 'N/A'}</p>
-            <p>연락처: {client.contact || 'N/A'}</p>
-            <p>성별: {client.gender}</p>
-            <p>나이: {client.age}</p>
-            <p>등록일: {client.registrationDate}</p>
+        <div className="client-info-card">
+            <div className="client-info-row single">
+                <h3>{client.name}</h3>
+            </div>
+            <div className="client-info-row">
+                <span>상담 주제:</span>
+                <span>{client.topic || 'N/A'}</span>
+            </div>
+            <div className="client-info-row">
+                <span>성별:</span>
+                <span>{client.gender}</span>
+            </div>
+            <div className="client-info-row">
+                <span>나이:</span>
+                <span>{client.age}</span>
+            </div>
         </div>
     );
 };

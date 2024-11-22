@@ -33,6 +33,11 @@ public class FlaskCommunicationService {
         try (CloseableHttpClient client = HttpClients.createDefault();
              CloseableHttpResponse response = client.execute(post)) {
 
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode != 200) {
+                throw new IOException("Flask 서버 응답 오류: " + statusCode);
+            }
+
             String jsonResponse = EntityUtils.toString(response.getEntity()); // JSON 형태의 응답
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(jsonResponse, List.class); // 응답을 List<Map> 형식으로 변환

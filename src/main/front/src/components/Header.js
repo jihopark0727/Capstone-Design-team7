@@ -45,14 +45,6 @@ function Header({ isLoggedIn, setIsLoggedIn, counselorName }) {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link
-                                        to="/dashboard"
-                                        className={location.pathname === '/dashboard' ? 'active' : ''}
-                                    >
-                                        감정 대시보드
-                                    </Link>
-                                </li>
-                                <li>
                                     <button onClick={handleLogout} className="logout-button">
                                         로그아웃
                                     </button>

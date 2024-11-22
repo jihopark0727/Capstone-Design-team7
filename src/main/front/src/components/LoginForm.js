@@ -100,15 +100,14 @@ function LoginForm({ setIsLoggedIn }) { // props로 setIsLoggedIn 받음
                     <button type="submit" className="button">
                         <span className="text-">로그인</span>
                     </button>
-                </div>
-                <div className="others">
-                    <button
-                        type="button"
-                        className="button-1"
-                        onClick={() => setIsModalOpen(true)}
+                    <div className="others">
+                    <span
+                        className="signup-link"
+                        onClick={() => setIsModalOpen(true)} // 회원가입 모달 열기
                     >
-                        <span className="text--1">회원가입</span>
-                    </button>
+                        회원가입
+                    </span>
+                    </div>
                 </div>
             </form>
 

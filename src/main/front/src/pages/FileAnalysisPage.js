@@ -1,7 +1,19 @@
-import React from "react";
-import "./FileAnalysisPage.css"
+import React, { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import "./FileAnalysisPage.css";
 
 function FileAnalysisPage() {
+    const location = useLocation();
+    const uploadStatus = location.state?.uploadStatus;
+
+    useEffect(() => {
+        if (uploadStatus === 'success') {
+            alert('파일 업로드 및 분석이 완료되었습니다.');
+        } else if (uploadStatus === 'failure') {
+            alert('파일 업로드에 실패했습니다. 다시 시도해주세요.');
+        }
+    }, [uploadStatus]);
+
     return (
         <div className="file-analysis-container">
             {/* 메인 콘텐츠 */}

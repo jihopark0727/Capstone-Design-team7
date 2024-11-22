@@ -177,3 +177,31 @@
     color: #FFFFFF;
 }
 
+/* 파일 업로드 아이콘과 이름 컨테이너 */
+.file-preview {
+    display: flex; /* 아이콘과 텍스트를 수평으로 배치 */
+    align-items: center; /* 세로 가운데 정렬 */
+    justify-content: center; /* 전체 가운데 정렬 */
+    gap: 10px; /* 아이콘과 파일 이름 사이 간격 */
+    font-size: 16px; /* 파일 이름 폰트 크기 */
+    color: #3D3D3D; /* 텍스트 색상 */
+    margin-top: 10px; /* 파일 이름과 업로드 박스 사이 간격 */
+}
+
+/* 파일 아이콘 스타일 */
+.file-icon {
+    font-size: 24px; /* 아이콘 크기 */
+    color: #3578FF; /* 아이콘 색상 */
+}
+
+/* 파일 이름 스타일 */
+.file-name {
+    font-weight: 600; /* 파일 이름 굵게 */
+    font-size: 16px; /* 파일 이름 크기 */
+    color: #26262C; /* 파일 이름 색상 */
+    white-space: nowrap; /* 이름이 길어도 줄바꿈하지 않음 */
+    overflow: hidden; /* 이름이 너무 길 경우 숨김 처리 */
+    text-overflow: ellipsis; /* 이름이 너무 길 경우 ... 표시 */
+    max-width: 200px; /* 파일 이름 최대 너비 */
+}
+

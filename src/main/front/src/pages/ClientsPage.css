@@ -1,0 +1,32 @@
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px; /* 검색창과 버튼 아래 여백 */
+}
+
+.view-records-button {
+    background-color: #0064FF;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.view-records-button:hover {
+    background-color: #0056D6;
+}
+
+.view-records-button:active {
+    background-color: #0044AA;
+}
