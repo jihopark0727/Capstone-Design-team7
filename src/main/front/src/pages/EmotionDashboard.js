@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import ClientInfo from '../components/ClientInfo';
+import EmotionKeywords from '../components/EmotionKeywords';
 import GptSummary from '../components/GptSummary';
 import EmotionGraph from '../components/EmotionGraph';
 import axios from 'axios';
@@ -185,13 +186,12 @@ const EmotionDashboard = () => {
                         </div>
                       </div>
                   ) : (
-                      <p>내담자 정보를 가져오는 중...</p>
+                    <p className="loading-message">내담자 정보</p>
                   )}
 
                   <div className="summary-and-graph">
                     <GptSummary />
-                    <EmotionGraph data={mockEmotionGraphData} /> {/* 임시 데이터 전달 */}
-                  </div>
+                    <EmotionKeywords keywords={['임시값']} />                  </div>
                 </>
             )}
             {activeMenu === '회기별 정보' && (

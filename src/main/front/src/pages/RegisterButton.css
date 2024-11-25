@@ -1,0 +1,22 @@
+.register-button-container {
+  position: absolute; /* 위치를 절대적으로 설정하여 자유롭게 이동 가능 */
+  top: 32%; /* Y축 위치, 필요에 따라 조정 */
+  left: 92%; /* X축 위치, 가운데 정렬 */
+  transform: translate(-50%, -50%); /* 가운데 정렬 보정 */
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  width: fit-content;
+  margin: 0 auto; /* margin 제거 (absolute에서 불필요) */
+  z-index: 1000; /* 다른 요소 위에 표시 */
+}
+
+.register-button-svg {
+  width: 150px; /* 버튼 크기 */
+  height: auto;
+  transition: transform 0.2s ease; /* 애니메이션 효과 */
+}
+
+.register-button-svg:hover {
+  transform: scale(1.1); /* 호버 시 크기 확대 */
+}

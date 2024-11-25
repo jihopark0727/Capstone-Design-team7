@@ -1,45 +1,86 @@
-.search-bar {
+/* 전체 컨테이너 */
+.search-bar-container {
+    position: relative;
+    width: 383px; /* SVG 크기와 일치 */
+    height: 94px;
+    margin: 20px auto;
+}
+
+/* SVG 배경 */
+.search-bar-background {
+    position: absolute; /* 위치를 절대적으로 조정 가능 */
+    top: 15px; /* Y축 위치 */
+    left: -505px; /* X축 위치 */
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+.background-svg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+/* 검색창 폼 */
+.search-bar-form {
+    position: absolute;
+    top: 46%;
+    left: 65%;
+    transform: translate(-50%, -50%);
     display: flex;
-    align-items: center; /* 입력창과 버튼을 수직으로 정렬 */
-    justify-content: center; /* 중앙 정렬 */
-    margin: 20px 0; /* 검색창 상하 여백 */
-    margin-right: 30px;
+    align-items: center;
+    width: 90%;
+    z-index: 2; /* SVG 위에 위치 */
 }
 
-.search-bar input {
-    width: 500px; /* 입력창 너비 */
-    padding: 10px 15px; /* 내부 여백 */
-    border: 1px solid #ccc; /* 테두리 색상 */
-    border-radius: 5px 0 0 5px; /* 왼쪽 모서리를 둥글게 */
-    font-size: 16px; /* 글자 크기 */
-    outline: none; /* 포커스 시 기본 외곽선 제거 */
-    transition: border-color 0.3s; /* 포커스 시 부드러운 효과 */
+/* 검색 입력창 */
+.search-bar-form input {
+    flex: 1;
+    padding: 10px 15px;
+    border: none;
+    font-size: 16px;
+    color: #555; /* 텍스트 색상 */
+    outline: none;
+    background: transparent; /* 배경 투명 */
 }
 
-.search-bar input:focus {
-    border-color: #0064FF; /* 포커스 시 테두리 색 변경 */
-    box-shadow: 0 0 5px rgba(0, 100, 255, 0.3); /* 포커스 시 외곽선 효과 */
+/* 플레이스홀더 스타일 */
+.search-bar-form input::placeholder {
+    color: #aaa; /* 플레이스홀더 색상 */
+    font-size: 14px;
 }
 
-.search-bar button {
-    background-color: #0064FF; /* 버튼 배경색 */
-    color: white; /* 버튼 텍스트 색 */
-    border: none; /* 기본 테두리 제거 */
-    padding: 10px 20px; /* 내부 여백 */
-    border-radius: 0 5px 5px 0; /* 오른쪽 모서리를 둥글게 */
-    font-size: 16px; /* 글자 크기 */
-    cursor: pointer; /* 마우스 커서 변경 */
-    transition: background-color 0.3s; /* 호버 시 부드러운 전환 효과 */
+/* 돋보기 버튼 */
+.icon-button {
+    position: absolute; /* 위치를 절대적으로 조정 가능 */
+    top: 0px; /* Y축 위치 */
+    left: -45px; /* X축 위치 */
+    width: 40px;
+    height: 40px;
+    background-color: transparent; /* 버튼 배경색 */
+    border: none;
+    border-radius: 50%; /* 둥근 버튼 모양 */
+    cursor: pointer;
+    outline: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3; /* 검색창 위에 위치 */
+    transition: all 0.3s ease; /* 부드러운 위치 변경 효과 */
 }
 
-.search-bar button:hover {
-    background-color: #0056D6; /* 호버 시 버튼 배경색 */
+/* 호버 시 버튼 효과 */
+.icon-button:hover {
+    background-color: transparent; /* 호버 시 배경색 변경 */
+    transform: scale(1.1); /* 버튼 크기 확대 */
 }
 
-.search-bar button:active {
-    background-color: #0044AA; /* 클릭 시 버튼 배경색 */
-}
-
-.search-bar button:focus {
-    outline: none; /* 포커스 시 기본 외곽선 제거 */
+/* 돋보기 버튼 내부 SVG */
+.icon-button svg {
+    width: 20px;
+    height: 20px;
+    fill: white; /* 아이콘 색상 */
 }

@@ -4,6 +4,8 @@ import SearchBar from '../components/SearchBar';
 import ClientTable from '../components/ClientTable';
 import ClientRegistrationForm from '../components/ClientRegistrationForm';
 import Modal from '../components/ClientRegistrationModal'; // 모달 컴포넌트 추가
+import { ReactComponent as RegisterButtonSVG } from "../assets/RegisterButton.svg"; // 등록 버튼 SVG
+import "./RegisterButton.css";
 import './ClientsPage.css';
 
 function ClientsPage() {
@@ -87,9 +89,10 @@ function ClientsPage() {
         <div className="container">
             <div className="controls">
                 <SearchBar onSearch={handleSearch} />
-                <button className="view-records-button" onClick={handleAddClient}>
-                    내담자 등록
-                </button>
+                {/* 등록 버튼 */}
+                <div className="register-button-container" onClick={handleAddClient}>
+                    <RegisterButtonSVG className="register-button-svg" />
+                </div>
             </div>
 
             {/* 모달로 폼 렌더링 */}
